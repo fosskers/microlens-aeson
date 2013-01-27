@@ -21,39 +21,8 @@ import Data.Attoparsec.Number
 import Data.Aeson
 
 -- Derived prisms
-import Data.Aeson.Traversal.Derived
-import Data.Aeson.Traversal.Types
-
-{-- Basic prisms for Value --}
-
-_object :: Prism' Value (HashMap Text Value)
-_object = _Object
-
-_array :: Prism' Value (Vector Value)
-_array = _Array
-
-_string :: Prism' Value Text
-_string = _String
-
-_number :: Prism' Value Number
-_number = _Number
-
-_bool :: Prism' Value Bool
-_bool = _Bool
-
--- | null value
-_null :: Prism' Value ()
-_null = _Null
-
-{-- Prisms for attoparsec's Number type --}
-
--- | Attoparsec Number  prisms
-integer :: Prism' Value Integer
-integer = _number . _I
-
--- | Attoparsec Number Double prism
-double :: Prism' Value Double
-double = _number . _D
+import Data.Aeson.Traversal.Value
+import Data.Aeson.Traversal.Primitive
 
 {-- Conversions --}
 
@@ -72,7 +41,7 @@ nonNull = prism id (\v -> if isn't _null v then Right v else Left v)
 primitive :: Prism' Value Primitive
 primitive = prism fromPrim toPrim
 
--- | Like 'primitive', but with Values instead of Primitives.
+-- | Like 'primitive', but returning Values instead of Primitives.
 primitive' :: Prism' Value Value
 primitive' = prism id f
   where f v@(Object _) = Left v
