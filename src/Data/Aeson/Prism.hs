@@ -26,34 +26,34 @@ import Data.Aeson.Traversal.Types
 
 {-- Basic prisms for Value --}
 
-object :: Prism' Value (HashMap Text Value)
-object = _Object
+_object :: Prism' Value (HashMap Text Value)
+_object = _Object
 
-array :: Prism' Value (Vector Value)
-array = _Array
+_array :: Prism' Value (Vector Value)
+_array = _Array
 
-string :: Prism' Value Text
-string = _String
+_string :: Prism' Value Text
+_string = _String
 
-number :: Prism' Value Number
-number = _Number
+_number :: Prism' Value Number
+_number = _Number
 
-bool :: Prism' Value Bool
-bool = _Bool
+_bool :: Prism' Value Bool
+_bool = _Bool
 
 -- | null value
-null :: Prism' Value ()
-null = _Null
+_null :: Prism' Value ()
+_null = _Null
 
 {-- Prisms for attoparsec's Number type --}
 
 -- | Attoparsec Number  prisms
 integer :: Prism' Value Integer
-integer = number . _I
+integer = _number . _I
 
 -- | Attoparsec Number Double prism
 double :: Prism' Value Double
-double = number . _D
+double = _number . _D
 
 {-- Conversions --}
 
@@ -65,7 +65,7 @@ integralv = integer . integral
 
 -- | Non-'Null' values
 nonNull :: Prism' Value Value
-nonNull = prism id (\v -> if isn't null v then Right v else Left v)
+nonNull = prism id (\v -> if isn't _null v then Right v else Left v)
 
 -- | Primitive 'Value's- i.e. things that aren't an 'Object' 
 -- or 'Array'.
