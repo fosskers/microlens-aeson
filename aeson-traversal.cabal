@@ -13,12 +13,15 @@ cabal-version:       >=1.8
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Data.Aeson.Prism
-  -- other-modules:       
-  build-depends:       base ==4.6.*,
-                       lens ==3.8.*,
-                       text ==0.11.*,
-                       vector ==0.10.*,
-                       unordered-containers ==0.2.*,
-                       attoparsec ==0.10.*,
-                       aeson ==0.6.*
+  exposed-modules:     Data.Aeson.Traversal,
+                       Data.Aeson.Traversal.Value
+                       Data.Aeson.Traversal.Primitive
+
+  build-depends:       base >= 4.6,
+                       lens >= 3.8,
+                       text >= 0.11,
+                       vector >= 0.10,
+                       unordered-containers >= 0.2,
+                       attoparsec >= 0.10,
+                       bytestring >= 0.10,
+                       aeson >= 0.6
