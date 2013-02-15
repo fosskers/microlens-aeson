@@ -94,5 +94,5 @@ nth i = _Array . ix i
 -- > over (decoded . key "a" . integer) (*100) $ "{\"a\": 1, \"b\": 3}"
 -- "{\"b\":3,\"a\":100}"
 -- @
-decoded :: Prism' ByteString Value
+decoded :: (FromJSON a, ToJSON a) => Prism' ByteString a
 decoded = prism encode (\t -> maybe (Left t) Right $ decode t)
