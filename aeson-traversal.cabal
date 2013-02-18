@@ -17,11 +17,11 @@ library
                        Data.Aeson.Traversal.Value
                        Data.Aeson.Traversal.Primitive
 
-  build-depends:       base >= 4.6,
+  build-depends:       base >= 4.3,
                        lens >= 3.8,
-                       text >= 0.11,
-                       vector >= 0.10,
-                       unordered-containers >= 0.2,
+                       text,
+                       vector,
+                       unordered-containers,
                        attoparsec >= 0.10,
-                       bytestring >= 0.10,
+                       bytestring,
                        aeson >= 0.6
