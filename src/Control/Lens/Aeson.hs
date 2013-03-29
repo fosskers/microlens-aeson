@@ -19,26 +19,26 @@
 --------------------------------------------------------------------
 module Control.Lens.Aeson
   (
-  -- * Objects
-    _Object, key
-  -- * Arrays
-  , _Array, nth
   -- * Numbers
-  , AsNumber(..)
+    AsNumber(..)
   , integralValue
   , nonNull
   -- * Primitive
   , Primitive(..)
   , AsPrimitive(..)
+  -- * Objects and Arrays
+  , AsValue(..)
+  , key, nth
   -- * Decoding
-  , aeson
+  , AsJSON(..)
   ) where
 
 import Control.Applicative
 import Control.Lens
 import Data.Aeson
 import Data.Attoparsec.Number
-import Data.ByteString.Lazy.Char8 as Char8 hiding (putStrLn)
+import Data.ByteString.Lazy.Char8 as Lazy hiding (putStrLn)
+import Data.ByteString.Lazy.UTF8 as UTF8 hiding (decode)
 import Data.Data
 import Data.HashMap.Strict (HashMap)
 import Data.Text
@@ -74,6 +74,7 @@ instance AsNumber Number where
   _Number = id
 
 instance AsNumber ByteString
+instance AsNumber String
 
 ------------------------------------------------------------------------------
 -- Conversion Prisms
@@ -99,7 +100,6 @@ data Primitive
 
 instance AsNumber Primitive where
   _Number = prism NumberPrim $ \v -> case v of NumberPrim s -> Right s; _ -> Left v
-
 
 class AsNumber t => AsPrimitive t where
   _Primitive :: Prism' t Primitive
@@ -133,6 +133,7 @@ instance AsPrimitive Value where
   _Null = prism (const Null) (\v -> case v of Null -> Right (); _ -> Left v)
 
 instance AsPrimitive ByteString
+instance AsPrimitive String
 
 instance AsPrimitive Primitive where
   _Primitive = id
@@ -147,8 +148,7 @@ nonNull = prism id (\v -> if isn't _Null v then Right v else Left v)
 
 class AsPrimitive t => AsValue t where
   -- |
-  -- >>> import Data.ByteString.Lazy.Lens
-  -- >>> putStrLn $ "{\"a\": 1, \"b\": 3}" & packedChars.key "a"._Integer *~ 100
+  -- >>> putStrLn $ "{\"a\": 1, \"b\": 3}" & key "a"._Integer *~ 100
   -- {"a":100,"b":3}
   _Value :: Prism' t Value
 
@@ -158,9 +158,14 @@ class AsPrimitive t => AsValue t where
   _Array :: Prism' t (Vector Value)
   _Array = _Value.prism Array (\v -> case v of Array a -> Right a; _ -> Left v)
 
-instance AsValue Value
+instance AsValue Value where
+  _Value = id
+
 instance AsValue ByteString where
-  _Value = prism' encode decode
+  _Value = _JSON
+
+instance AsValue String where
+  _Value = iso UTF8.fromString UTF8.toString._Value
 
 -- | Like 'ix', but for 'Object' with Text indices. This often has better inference than 'ix' when used with OverloadedStrings
 key :: AsValue t => Text -> IndexedTraversal' Text t Value
@@ -170,9 +175,15 @@ key i = _Object . ix i
 nth :: AsValue t => Int -> IndexedTraversal' Int t Value
 nth i = _Array . ix i
 
--- | A Prism into 'Value' on lazy 'ByteString's.
-aeson :: (FromJSON a, ToJSON a) => Prism' ByteString a
-aeson = prism' encode decode
+class AsJSON t where
+  -- | A Prism into 'Value' on lazy 'ByteString's.
+  _JSON :: (FromJSON a, ToJSON a) => Prism' t a
+
+instance AsJSON Lazy.ByteString where
+  _JSON = prism' encode decode
+
+instance AsJSON String where
+  _JSON = iso UTF8.fromString UTF8.toString._JSON
 
 ------------------------------------------------------------------------------
 -- Orphan instances
