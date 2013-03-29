@@ -6,6 +6,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 --------------------------------------------------------------------
 -- |
@@ -37,7 +38,7 @@ import Control.Applicative
 import Control.Lens
 import Data.Aeson
 import Data.Attoparsec.Number
-import Data.ByteString.Lazy.Char8 as Char8
+import Data.ByteString.Lazy.Char8 as Char8 hiding (putStrLn)
 import Data.Data
 import Data.HashMap.Strict (HashMap)
 import Data.Text
@@ -48,15 +49,6 @@ import Prelude hiding(null)
 -- $setup
 -- >>> :set -XOverloadedStrings
 
-------------------------------------------------------------------------------
--- Value prisms
-------------------------------------------------------------------------------
-
-_Object :: Prism' Value (HashMap Text Value)
-_Object = prism Object $ \v -> case v of Object o -> Right o; _ -> Left v
-
-_Array :: Prism' Value (Vector Value)
-_Array = prism Array $ \v -> case v of Array a -> Right a; _ -> Left v
 
 ------------------------------------------------------------------------------
 -- Number prisms
@@ -64,6 +56,8 @@ _Array = prism Array $ \v -> case v of Array a -> Right a; _ -> Left v
 
 class AsNumber t where
   _Number :: Prism' t Number
+  default _Number :: AsPrimitive t => Prism' t Number
+  _Number = _Primitive._Number
 
   -- | Prism into an 'Double' over a 'Value', 'Primitive' or 'Number'
   _Double :: Prism' t Double
@@ -78,6 +72,8 @@ instance AsNumber Value where
 
 instance AsNumber Number where
   _Number = id
+
+instance AsNumber ByteString
 
 ------------------------------------------------------------------------------
 -- Conversion Prisms
@@ -104,8 +100,11 @@ data Primitive
 instance AsNumber Primitive where
   _Number = prism NumberPrim $ \v -> case v of NumberPrim s -> Right s; _ -> Left v
 
+
 class AsNumber t => AsPrimitive t where
   _Primitive :: Prism' t Primitive
+  default _Primitive :: AsValue t => Prism' t Primitive
+  _Primitive = _Value._Primitive
 
   _String :: Prism' t Text
   _String = _Primitive.prism StringPrim (\v -> case v of StringPrim s -> Right s; _ -> Left v)
@@ -133,6 +132,8 @@ instance AsPrimitive Value where
   _Bool = prism Bool (\v -> case v of Bool b -> Right b; _ -> Left v)
   _Null = prism (const Null) (\v -> case v of Null -> Right (); _ -> Left v)
 
+instance AsPrimitive ByteString
+
 instance AsPrimitive Primitive where
   _Primitive = id
 
@@ -144,22 +145,34 @@ nonNull = prism id (\v -> if isn't _Null v then Right v else Left v)
 -- Non-primitive traversals
 ------------------------------------------------------------------------------
 
+class AsPrimitive t => AsValue t where
+  -- |
+  -- >>> import Data.ByteString.Lazy.Lens
+  -- >>> putStrLn $ "{\"a\": 1, \"b\": 3}" & packedChars.key "a"._Integer *~ 100
+  -- {"a":100,"b":3}
+  _Value :: Prism' t Value
+
+  _Object :: Prism' t (HashMap Text Value)
+  _Object = _Value.prism Object (\v -> case v of Object o -> Right o; _ -> Left v)
+
+  _Array :: Prism' t (Vector Value)
+  _Array = _Value.prism Array (\v -> case v of Array a -> Right a; _ -> Left v)
+
+instance AsValue Value
+instance AsValue ByteString where
+  _Value = prism' encode decode
+
 -- | Like 'ix', but for 'Object' with Text indices. This often has better inference than 'ix' when used with OverloadedStrings
-key :: Text -> IndexedTraversal' Text Value Value
+key :: AsValue t => Text -> IndexedTraversal' Text t Value
 key i = _Object . ix i
 
 -- | Like 'ix', but for Arrays with Int indexes
-nth :: Int -> IndexedTraversal' Int Value Value
+nth :: AsValue t => Int -> IndexedTraversal' Int t Value
 nth i = _Array . ix i
 
 -- | A Prism into 'Value' on lazy 'ByteString's.
--- To illustrate (assuming the OverloadedStrings extension):
---
--- >>> import Data.ByteString.Lazy.Lens
--- >>> "{\"a\": 1, \"b\": 3}" & packedChars.aeson.key "a"._Integer *~ 100
--- "{\"a\":100,\"b\":3}
 aeson :: (FromJSON a, ToJSON a) => Prism' ByteString a
-aeson = prism encode (\t -> maybe (Left t) Right $ decode t)
+aeson = prism' encode decode
 
 ------------------------------------------------------------------------------
 -- Orphan instances
