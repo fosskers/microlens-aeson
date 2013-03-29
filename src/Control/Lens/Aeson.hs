@@ -135,8 +135,7 @@ nonNull = prism id (\v -> if isn't _Null v then Right v else Left v)
 -- Non-primitive traversals
 ------------------------------------------------------------------------------
 
-
--- | Like 'key', but for Arrays with Int indexes
+-- | Like 'ix', but for Arrays with Int indexes
 nth :: Int -> IndexedTraversal' Int Value Value
 nth i = _Array . ix i
 
@@ -144,7 +143,7 @@ nth i = _Array . ix i
 -- To illustrate (assuming the OverloadedStrings extension):
 --
 -- @
--- > over (decoded . key "a" . integer) (*100) $ "{\"a\": 1, \"b\": 3}"
+-- > over (decoded . ix "a" . integer) (*100) $ "{\"a\": 1, \"b\": 3}"
 -- "{\"b\":3,\"a\":100}"
 -- @
 decoded :: (FromJSON a, ToJSON a) => Prism' ByteString a
@@ -163,3 +162,8 @@ instance Applicative f => Ixed f Value where
 instance (Applicative f, Gettable f) => Contains f Value where
   contains i f (Object o) = coerce (contains i f o)
   contains i f _ = coerce (indexed f i False)
+
+instance Plated Value where
+  plate f (Object o) = Object <$> traverse f o
+  plate f (Array a) = Array <$> traverse f a
+  plate _ xs = pure xs
