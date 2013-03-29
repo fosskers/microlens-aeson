@@ -24,7 +24,7 @@ module Control.Lens.Aeson
   -- * Arrays
   , _Array, nth
   -- * Numbers
-    AsNumber(..)
+  , AsNumber(..)
   , integralValue
   , nonNull
   -- * Primitive
