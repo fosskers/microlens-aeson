@@ -3,7 +3,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -20,7 +19,7 @@
 module Control.Lens.Aeson
   (
   -- * Objects
-    _Object
+    _Object, key
   -- * Arrays
   , _Array, nth
   -- * Numbers
@@ -38,13 +37,16 @@ import Control.Applicative
 import Control.Lens
 import Data.Aeson
 import Data.Attoparsec.Number
-import Data.ByteString.Lazy (ByteString)
+import Data.ByteString.Lazy.Char8 as Char8
 import Data.Data
 import Data.HashMap.Strict (HashMap)
 import Data.Text
 import Data.Vector (Vector)
 import Numeric.Lens
 import Prelude hiding(null)
+
+-- $setup
+-- >>> :set -XOverloadedStrings
 
 ------------------------------------------------------------------------------
 -- Value prisms
@@ -142,6 +144,10 @@ nonNull = prism id (\v -> if isn't _Null v then Right v else Left v)
 -- Non-primitive traversals
 ------------------------------------------------------------------------------
 
+-- | Like 'ix', but for 'Object' with Text indices. This often has better inference than 'ix' when used with OverloadedStrings
+key :: Text -> IndexedTraversal' Text Value Value
+key i = _Object . ix i
+
 -- | Like 'ix', but for Arrays with Int indexes
 nth :: Int -> IndexedTraversal' Int Value Value
 nth i = _Array . ix i
@@ -149,10 +155,9 @@ nth i = _Array . ix i
 -- | A Prism into 'Value' on lazy 'ByteString's.
 -- To illustrate (assuming the OverloadedStrings extension):
 --
--- @
--- > over (aeson . ix "a" . integer) (*100) $ "{\"a\": 1, \"b\": 3}"
--- "{\"b\":3,\"a\":100}"
--- @
+-- >>> import Data.ByteString.Lazy.Lens
+-- >>> "{\"a\": 1, \"b\": 3}" & packedChars.aeson.key "a"._Integer *~ 100
+-- "{\"a\":100,\"b\":3}
 aeson :: (FromJSON a, ToJSON a) => Prism' ByteString a
 aeson = prism encode (\t -> maybe (Left t) Right $ decode t)
 
