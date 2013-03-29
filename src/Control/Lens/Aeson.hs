@@ -18,14 +18,20 @@
 --
 --------------------------------------------------------------------
 module Control.Lens.Aeson
-  ( _Object
-  , _Array
-  , AsNumber(..)
+  (
+  -- * Objects
+    _Object
+  -- * Arrays
+  , _Array, nth
+  -- * Numbers
+    AsNumber(..)
   , integralValue
   , nonNull
+  -- * Primitive
+  , Primitive(..)
   , AsPrimitive(..)
-  , nth
-  , decoded
+  -- * Decoding
+  , aeson
   ) where
 
 import Control.Applicative
@@ -144,11 +150,11 @@ nth i = _Array . ix i
 -- To illustrate (assuming the OverloadedStrings extension):
 --
 -- @
--- > over (decoded . ix "a" . integer) (*100) $ "{\"a\": 1, \"b\": 3}"
+-- > over (aeson . ix "a" . integer) (*100) $ "{\"a\": 1, \"b\": 3}"
 -- "{\"b\":3,\"a\":100}"
 -- @
-decoded :: (FromJSON a, ToJSON a) => Prism' ByteString a
-decoded = prism encode (\t -> maybe (Left t) Right $ decode t)
+aeson :: (FromJSON a, ToJSON a) => Prism' ByteString a
+aeson = prism encode (\t -> maybe (Left t) Right $ decode t)
 
 ------------------------------------------------------------------------------
 -- Orphan instances
