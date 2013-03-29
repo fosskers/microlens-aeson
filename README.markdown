@@ -1,9 +1,9 @@
-aeson-lenses
-============
+lens-aeson
+==========
 
-[![Build Status](https://secure.travis-ci.org/analytics/aeson-lenses.png)](http://travis-ci.org/analytics/aeson-lenses)
+[![Build Status](https://secure.travis-ci.org/lens/lens-aeson.png)](http://travis-ci.org/lens/lens-aeson)
 
-The goal of aeson-traversal is to provide traversals and prisms for
+The goal of `lens-aeson` is to provide traversals and prisms for
 the [Aeson](http://hackage.haskell.org/package/aeson) library's
 Value type, while obeying the `Traversal`/`Prism` laws.
 
