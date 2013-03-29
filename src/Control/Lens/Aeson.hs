@@ -1,9 +1,12 @@
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE RankNTypes        #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013, (c) Paul Wilson 2012
@@ -20,11 +23,11 @@ module Control.Lens.Aeson
   , integralValue
   , nonNull
   , AsPrimitive(..)
-  , key
   , nth
   , decoded
   ) where
 
+import Control.Applicative
 import Control.Lens
 import Data.Aeson
 import Data.Attoparsec.Number
@@ -32,9 +35,9 @@ import Data.ByteString.Lazy (ByteString)
 import Data.Data
 import Data.HashMap.Strict (HashMap)
 import Data.Text
+import Data.Vector (Vector)
 import Numeric.Lens
 import Prelude hiding(null)
-import Data.Vector (Vector)
 
 ------------------------------------------------------------------------------
 -- Value prisms
@@ -132,9 +135,6 @@ nonNull = prism id (\v -> if isn't _Null v then Right v else Left v)
 -- Non-primitive traversals
 ------------------------------------------------------------------------------
 
--- | Traversal over a specific field of an object.
-key :: Text -> IndexedTraversal' Text Value Value
-key k = _Object . ix k
 
 -- | Like 'key', but for Arrays with Int indexes
 nth :: Int -> IndexedTraversal' Int Value Value
@@ -149,3 +149,17 @@ nth i = _Array . ix i
 -- @
 decoded :: (FromJSON a, ToJSON a) => Prism' ByteString a
 decoded = prism encode (\t -> maybe (Left t) Right $ decode t)
+
+------------------------------------------------------------------------------
+-- Orphan instances
+------------------------------------------------------------------------------
+
+type instance Index Value = Text
+type instance IxValue Value = Value
+
+instance Applicative f => Ixed f Value where
+  ix i = _Object.ix i
+
+instance (Applicative f, Gettable f) => Contains f Value where
+  contains i f (Object o) = coerce (contains i f o)
+  contains i f _ = coerce (indexed f i False)
