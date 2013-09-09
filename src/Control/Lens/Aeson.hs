@@ -168,11 +168,11 @@ instance AsValue String where
   _Value = iso UTF8.fromString UTF8.toString._Value
 
 -- | Like 'ix', but for 'Object' with Text indices. This often has better inference than 'ix' when used with OverloadedStrings
-key :: AsValue t => Text -> IndexedTraversal' Text t Value
+key :: AsValue t => Text -> Traversal' t Value
 key i = _Object . ix i
 
 -- | Like 'ix', but for Arrays with Int indexes
-nth :: AsValue t => Int -> IndexedTraversal' Int t Value
+nth :: AsValue t => Int -> Traversal' t Value
 nth i = _Array . ix i
 
 class AsJSON t where
