@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -62,8 +63,10 @@ class AsNumber t where
   -- >>> "[1, \"x\"]" ^? nth 1 . _Number
   -- Nothing
   _Number :: Prism' t Number
+#ifndef HLINT
   default _Number :: AsPrimitive t => Prism' t Number
   _Number = _Primitive._Number
+#endif
 
   -- |
   -- Prism into an 'Double' over a 'Value', 'Primitive' or 'Number'
@@ -141,8 +144,10 @@ class AsNumber t => AsPrimitive t where
   -- >>> "[1, \"x\", null, true, false]" ^? nth 4 . _Primitive
   -- Just (BoolPrim False)
   _Primitive :: Prism' t Primitive
+#ifndef HLINT
   default _Primitive :: AsValue t => Prism' t Primitive
   _Primitive = _Value._Primitive
+#endif
 
   -- "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _String
   -- Just "xyz"
