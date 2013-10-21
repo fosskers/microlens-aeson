@@ -29,7 +29,8 @@ module Control.Lens.Aeson
   , AsPrimitive(..)
   -- * Objects and Arrays
   , AsValue(..)
-  , key, nth
+  , key, members
+  , nth, values
   -- * Decoding
   , AsJSON(..)
   ) where
@@ -255,6 +256,9 @@ instance AsValue String where
 key :: AsValue t => Text -> Traversal' t Value
 key i = _Object . ix i
 
+members :: AsValue t => IndexedTraversal' Text t Value
+members = _Object . each
+
 -- | Like 'ix', but for Arrays with Int indexes
 --
 -- >>> "[1,2,3]" ^? nth 1
@@ -267,6 +271,9 @@ key i = _Object . ix i
 -- "[1,20,3]"
 nth :: AsValue t => Int -> Traversal' t Value
 nth i = _Array . ix i
+
+values :: AsValue t => IndexedTraversal' Int t Value
+values = _Array . traversed
 
 class AsJSON t where
   -- | A Prism into 'Value' on lazy 'ByteString's.
