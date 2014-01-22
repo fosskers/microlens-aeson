@@ -67,6 +67,7 @@ class AsNumber t where
 #ifndef HLINT
   default _Number :: AsPrimitive t => Prism' t Number
   _Number = _Primitive._Number
+  {-# INLINE _Number #-}
 #endif
 
   -- |
@@ -76,6 +77,7 @@ class AsNumber t where
   -- Just 10.2
   _Double :: Prism' t Double
   _Double = _Number.prism D (\v -> case v of D d -> Right d; _ -> Left v)
+  {-# INLINE _Double #-}
 
   -- |
   -- Prism into an 'Integer' over a 'Value', 'Primitive' or 'Number'
@@ -87,12 +89,15 @@ class AsNumber t where
   -- Nothing
   _Integer :: Prism' t Integer
   _Integer = _Number.prism I (\v -> case v of I i -> Right i; _ -> Left v)
+  {-# INLINE _Integer #-}
 
 instance AsNumber Value where
   _Number = prism Number $ \v -> case v of Number n -> Right n; _ -> Left v
+  {-# INLINE _Number #-}
 
 instance AsNumber Number where
   _Number = id
+  {-# INLINE _Number #-}
 
 instance AsNumber ByteString
 instance AsNumber String
@@ -112,6 +117,7 @@ instance AsNumber String
 -- Nothing
 integralValue :: (AsNumber t, Integral a) => Prism' t a
 integralValue = _Integer . integral
+{-# INLINE integralValue #-}
 
 ------------------------------------------------------------------------------
 -- Null values and primitives
@@ -127,6 +133,7 @@ data Primitive
 
 instance AsNumber Primitive where
   _Number = prism NumberPrim $ \v -> case v of NumberPrim s -> Right s; _ -> Left v
+  {-# INLINE _Number #-}
 
 class AsNumber t => AsPrimitive t where
   -- |
@@ -148,6 +155,7 @@ class AsNumber t => AsPrimitive t where
 #ifndef HLINT
   default _Primitive :: AsValue t => Prism' t Primitive
   _Primitive = _Value._Primitive
+  {-# INLINE _Primitive #-}
 #endif
 
   -- "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _String
@@ -157,6 +165,7 @@ class AsNumber t => AsPrimitive t where
   -- Nothing
   _String :: Prism' t Text
   _String = _Primitive.prism StringPrim (\v -> case v of StringPrim s -> Right s; _ -> Left v)
+  {-# INLINE _String #-}
 
   -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "b" . _Bool
   -- Just True
@@ -165,6 +174,7 @@ class AsNumber t => AsPrimitive t where
   -- Nothing
   _Bool :: Prism' t Bool
   _Bool = _Primitive.prism BoolPrim (\v -> case v of BoolPrim b -> Right b; _ -> Left v)
+  {-# INLINE _Bool #-}
 
   -- >>> "{\"a\": \"xyz\", \"b\": null}" ^? key "b" . _Null
   -- Just ()
@@ -173,6 +183,7 @@ class AsNumber t => AsPrimitive t where
   -- Nothing
   _Null :: Prism' t ()
   _Null = _Primitive.prism (const NullPrim) (\v -> case v of NullPrim -> Right (); _ -> Left v)
+  {-# INLINE _Null #-}
 
 instance AsPrimitive Value where
   _Primitive = prism fromPrim toPrim
@@ -182,20 +193,26 @@ instance AsPrimitive Value where
       toPrim (Bool b)   = Right $ BoolPrim b
       toPrim Null       = Right $ NullPrim
       toPrim v          = Left v
+      {-# INLINE toPrim #-}
       fromPrim (StringPrim s) = String s
       fromPrim (NumberPrim n) = Number n
       fromPrim (BoolPrim b)   = Bool b
       fromPrim NullPrim       = Null
-
+      {-# INLINE fromPrim #-}
+  {-# INLINE _Primitive #-}
   _String = prism String $ \v -> case v of String s -> Right s; _ -> Left v
+  {-# INLINE _String #-}
   _Bool = prism Bool (\v -> case v of Bool b -> Right b; _ -> Left v)
+  {-# INLINE _Bool #-}
   _Null = prism (const Null) (\v -> case v of Null -> Right (); _ -> Left v)
+  {-# INLINE _Null #-}
 
 instance AsPrimitive ByteString
 instance AsPrimitive String
 
 instance AsPrimitive Primitive where
   _Primitive = id
+  {-# INLINE _Primitive #-}
 
 -- | Prism into non-'Null' values
 --
@@ -209,6 +226,7 @@ instance AsPrimitive Primitive where
 -- Nothing
 nonNull :: Prism' Value Value
 nonNull = prism id (\v -> if isn't _Null v then Right v else Left v)
+{-# INLINE nonNull #-}
 
 ------------------------------------------------------------------------------
 -- Non-primitive traversals
@@ -228,21 +246,26 @@ class AsPrimitive t => AsValue t where
   -- Nothing
   _Object :: Prism' t (HashMap Text Value)
   _Object = _Value.prism Object (\v -> case v of Object o -> Right o; _ -> Left v)
+  {-# INLINE _Object #-}
 
   -- |
   -- >>> "[1,2,3]" ^? _Array
   -- Just (fromList [Number 1,Number 2,Number 3])
   _Array :: Prism' t (Vector Value)
   _Array = _Value.prism Array (\v -> case v of Array a -> Right a; _ -> Left v)
+  {-# INLINE _Array #-}
 
 instance AsValue Value where
   _Value = id
+  {-# INLINE _Value #-}
 
 instance AsValue ByteString where
   _Value = _JSON
+  {-# INLINE _Value #-}
 
 instance AsValue String where
   _Value = iso UTF8.fromString UTF8.toString._Value
+  {-# INLINE _Value #-}
 
 -- |
 -- Like 'ix', but for 'Object' with Text indices. This often has better
@@ -255,9 +278,11 @@ instance AsValue String where
 -- Nothing
 key :: AsValue t => Text -> Traversal' t Value
 key i = _Object . ix i
+{-# INLINE key #-}
 
 members :: AsValue t => IndexedTraversal' Text t Value
 members = _Object . each
+{-# INLINE members #-}
 
 -- | Like 'ix', but for Arrays with Int indexes
 --
@@ -271,9 +296,11 @@ members = _Object . each
 -- "[1,20,3]"
 nth :: AsValue t => Int -> Traversal' t Value
 nth i = _Array . ix i
+{-# INLINE nth #-}
 
 values :: AsValue t => IndexedTraversal' Int t Value
 values = _Array . traversed
+{-# INLINE values #-}
 
 class AsJSON t where
   -- | A Prism into 'Value' on lazy 'ByteString's.
@@ -281,9 +308,11 @@ class AsJSON t where
 
 instance AsJSON Lazy.ByteString where
   _JSON = prism' encode decode
+  {-# INLINE _JSON #-}
 
 instance AsJSON String where
   _JSON = iso UTF8.fromString UTF8.toString._JSON
+  {-# INLINE _JSON #-}
 
 ------------------------------------------------------------------------------
 -- Orphan instances
@@ -294,12 +323,15 @@ type instance IxValue Value = Value
 
 instance Applicative f => Ixed f Value where
   ix i = _Object.ix i
+  {-# INLINE ix #-}
 
 instance (Applicative f, Gettable f) => Contains f Value where
   contains i f (Object o) = coerce (contains i f o)
   contains i f _ = coerce (indexed f i False)
+  {-# INLINE contains #-}
 
 instance Plated Value where
   plate f (Object o) = Object <$> traverse f o
   plate f (Array a) = Array <$> traverse f a
   plate _ xs = pure xs
+  {-# INLINE plate #-}
