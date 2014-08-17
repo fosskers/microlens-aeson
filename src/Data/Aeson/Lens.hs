@@ -2,7 +2,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
@@ -11,18 +10,18 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 --------------------------------------------------------------------
 -- |
--- Copyright :  (c) Edward Kmett 2013, (c) Paul Wilson 2012
+-- Copyright :  (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
 -- Stability :  experimental
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Control.Lens.Aeson
+module Data.Aeson.Lens
   (
   -- * Numbers
     AsNumber(..)
-  , integralValue
+  , _Integral
   , nonNull
   -- * Primitive
   , Primitive(..)
@@ -38,68 +37,80 @@ module Control.Lens.Aeson
 import Control.Applicative
 import Control.Lens
 import Data.Aeson
-import Data.Attoparsec.Number
+import Data.Aeson.Parser (value)
+import Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
+import Data.Scientific (Scientific)
+import qualified Data.Scientific as Scientific
+import qualified Data.ByteString as Strict
 import Data.ByteString.Lazy.Char8 as Lazy hiding (putStrLn)
-import Data.ByteString.Lazy.UTF8 as UTF8 hiding (decode)
 import Data.Data
 import Data.HashMap.Strict (HashMap)
-import Data.Text
+import Data.Text as Text
+import qualified Data.Text.Lazy as LazyText
+import Data.Text.Lens (packed)
+import qualified Data.Text.Encoding as StrictText
+import qualified Data.Text.Lazy.Encoding as LazyText
 import Data.Vector (Vector)
-import Numeric.Lens
-import Prelude hiding(null)
+import Prelude hiding (null)
 
 -- $setup
+-- >>> import Data.ByteString.Char8 as Strict.Char8
 -- >>> :set -XOverloadedStrings
 
-
 ------------------------------------------------------------------------------
--- Number prisms
+-- Scientific prisms
 ------------------------------------------------------------------------------
 
 class AsNumber t where
   -- |
   -- >>> "[1, \"x\"]" ^? nth 0 . _Number
-  -- Just 1
+  -- Just 1.0
   --
   -- >>> "[1, \"x\"]" ^? nth 1 . _Number
   -- Nothing
-  _Number :: Prism' t Number
+  _Number :: Prism' t Scientific
 #ifndef HLINT
-  default _Number :: AsPrimitive t => Prism' t Number
+  default _Number :: AsPrimitive t => Prism' t Scientific
   _Number = _Primitive._Number
   {-# INLINE _Number #-}
 #endif
 
   -- |
-  -- Prism into an 'Double' over a 'Value', 'Primitive' or 'Number'
+  -- Prism into an 'Double' over a 'Value', 'Primitive' or 'Scientific'
   --
   -- >>> "[10.2]" ^? nth 0 . _Double
   -- Just 10.2
   _Double :: Prism' t Double
-  _Double = _Number.prism D (\v -> case v of D d -> Right d; _ -> Left v)
+  _Double = _Number.iso Scientific.toRealFloat realToFrac
   {-# INLINE _Double #-}
 
   -- |
-  -- Prism into an 'Integer' over a 'Value', 'Primitive' or 'Number'
+  -- Prism into an 'Integer' over a 'Value', 'Primitive' or 'Scientific'
   --
   -- >>> "[10]" ^? nth 0 . _Integer
   -- Just 10
   --
   -- >>> "[10.5]" ^? nth 0 . _Integer
-  -- Nothing
+  -- Just 10
+  --
+  -- >>> "42" ^? _Integer
+  -- Just 42
   _Integer :: Prism' t Integer
-  _Integer = _Number.prism I (\v -> case v of I i -> Right i; _ -> Left v)
+  _Integer = _Number.iso floor fromIntegral
   {-# INLINE _Integer #-}
 
 instance AsNumber Value where
   _Number = prism Number $ \v -> case v of Number n -> Right n; _ -> Left v
   {-# INLINE _Number #-}
 
-instance AsNumber Number where
+instance AsNumber Scientific where
   _Number = id
   {-# INLINE _Number #-}
 
-instance AsNumber ByteString
+instance AsNumber Strict.ByteString
+instance AsNumber Lazy.ByteString
+instance AsNumber Text
+instance AsNumber LazyText.Text
 instance AsNumber String
 
 ------------------------------------------------------------------------------
@@ -108,16 +119,14 @@ instance AsNumber String
 
 -- | Access Integer 'Value's as Integrals.
 --
--- defined as `integer . 'Numeric.Lens.integral'`
---
--- >>> "[10]" ^? nth 0 . integralValue
+-- >>> "[10]" ^? nth 0 . _Integral
 -- Just 10
 --
--- >>> "[10.5]" ^? nth 0 . integralValue
--- Nothing
-integralValue :: (AsNumber t, Integral a) => Prism' t a
-integralValue = _Integer . integral
-{-# INLINE integralValue #-}
+-- >>> "[10.5]" ^? nth 0 . _Integral
+-- Just 10
+_Integral :: (AsNumber t, Integral a) => Prism' t a
+_Integral = _Number . iso floor fromIntegral
+{-# INLINE _Integral #-}
 
 ------------------------------------------------------------------------------
 -- Null values and primitives
@@ -126,7 +135,7 @@ integralValue = _Integer . integral
 -- | Primitives of 'Value'
 data Primitive
   = StringPrim !Text
-  | NumberPrim !Number
+  | NumberPrim !Scientific
   | BoolPrim !Bool
   | NullPrim
   deriving (Eq,Ord,Show,Data,Typeable)
@@ -138,7 +147,7 @@ instance AsNumber Primitive where
 class AsNumber t => AsPrimitive t where
   -- |
   -- >>> "[1, \"x\", null, true, false]" ^? nth 0 . _Primitive
-  -- Just (NumberPrim 1)
+  -- Just (NumberPrim 1.0)
   --
   -- >>> "[1, \"x\", null, true, false]" ^? nth 1 . _Primitive
   -- Just (StringPrim "x")
@@ -163,6 +172,9 @@ class AsNumber t => AsPrimitive t where
   --
   -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "b" . _String
   -- Nothing
+  --
+  -- >>> _Object._Wrapped # [("key" :: Text, _String # "value")]
+  -- "{\"key\":\"value\"}"
   _String :: Prism' t Text
   _String = _Primitive.prism StringPrim (\v -> case v of StringPrim s -> Right s; _ -> Left v)
   {-# INLINE _String #-}
@@ -172,6 +184,12 @@ class AsNumber t => AsPrimitive t where
   --
   -- "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _Bool
   -- Nothing
+  --
+  -- >>> _Bool # True
+  -- "true"
+  --
+  -- >>> _Bool # False
+  -- "false"
   _Bool :: Prism' t Bool
   _Bool = _Primitive.prism BoolPrim (\v -> case v of BoolPrim b -> Right b; _ -> Left v)
   {-# INLINE _Bool #-}
@@ -181,9 +199,13 @@ class AsNumber t => AsPrimitive t where
   --
   -- >>> "{\"a\": \"xyz\", \"b\": null}" ^? key "a" . _Null
   -- Nothing
+  --
+  -- >>> _Null # ()
+  -- "null"
   _Null :: Prism' t ()
   _Null = _Primitive.prism (const NullPrim) (\v -> case v of NullPrim -> Right (); _ -> Left v)
   {-# INLINE _Null #-}
+
 
 instance AsPrimitive Value where
   _Primitive = prism fromPrim toPrim
@@ -191,7 +213,7 @@ instance AsPrimitive Value where
       toPrim (String s) = Right $ StringPrim s
       toPrim (Number n) = Right $ NumberPrim n
       toPrim (Bool b)   = Right $ BoolPrim b
-      toPrim Null       = Right $ NullPrim
+      toPrim Null       = Right NullPrim
       toPrim v          = Left v
       {-# INLINE toPrim #-}
       fromPrim (StringPrim s) = String s
@@ -207,7 +229,10 @@ instance AsPrimitive Value where
   _Null = prism (const Null) (\v -> case v of Null -> Right (); _ -> Left v)
   {-# INLINE _Null #-}
 
-instance AsPrimitive ByteString
+instance AsPrimitive Strict.ByteString
+instance AsPrimitive Lazy.ByteString
+instance AsPrimitive Text.Text
+instance AsPrimitive LazyText.Text
 instance AsPrimitive String
 
 instance AsPrimitive Primitive where
@@ -220,7 +245,7 @@ instance AsPrimitive Primitive where
 -- Just (String "xyz")
 --
 -- >>> "{\"a\": {}, \"b\": null}" ^? key "a" . nonNull
--- Just (Object fromList [])
+-- Just (Object (fromList []))
 --
 -- >>> "{\"a\": \"xyz\", \"b\": null}" ^? key "b" . nonNull
 -- Nothing
@@ -234,23 +259,26 @@ nonNull = prism id (\v -> if isn't _Null v then Right v else Left v)
 
 class AsPrimitive t => AsValue t where
   -- |
-  -- >>>"[1,2,3]" ^? _Value
-  -- Just (Array (fromList [Number 1,Number 2,Number 3]))
+  -- >>> "[1,2,3]" ^? _Value
+  -- Just (Array (fromList [Number 1.0,Number 2.0,Number 3.0]))
   _Value :: Prism' t Value
 
   -- |
   -- >>> "{\"a\": {}, \"b\": null}" ^? key "a" . _Object
-  -- Just fromList []
+  -- Just (fromList [])
   --
   -- >>> "{\"a\": {}, \"b\": null}" ^? key "b" . _Object
   -- Nothing
+  --
+  -- >>> _Object._Wrapped # [("key" :: Text, _String # "value")] :: String
+  -- "{\"key\":\"value\"}"
   _Object :: Prism' t (HashMap Text Value)
   _Object = _Value.prism Object (\v -> case v of Object o -> Right o; _ -> Left v)
   {-# INLINE _Object #-}
 
   -- |
   -- >>> "[1,2,3]" ^? _Array
-  -- Just (fromList [Number 1,Number 2,Number 3])
+  -- Just (fromList [Number 1.0,Number 2.0,Number 3.0])
   _Array :: Prism' t (Vector Value)
   _Array = _Value.prism Array (\v -> case v of Array a -> Right a; _ -> Left v)
   {-# INLINE _Array #-}
@@ -259,12 +287,24 @@ instance AsValue Value where
   _Value = id
   {-# INLINE _Value #-}
 
-instance AsValue ByteString where
+instance AsValue Strict.ByteString where
+  _Value = _JSON
+  {-# INLINE _Value #-}
+
+instance AsValue Lazy.ByteString where
   _Value = _JSON
   {-# INLINE _Value #-}
 
 instance AsValue String where
-  _Value = iso UTF8.fromString UTF8.toString._Value
+  _Value = strictUtf8._JSON
+  {-# INLINE _Value #-}
+
+instance AsValue Text where
+  _Value = strictTextUtf8._JSON
+  {-# INLINE _Value #-}
+
+instance AsValue LazyText.Text where
+  _Value = lazyTextUtf8._JSON
   {-# INLINE _Value #-}
 
 -- |
@@ -272,7 +312,7 @@ instance AsValue String where
 -- inference than 'ix' when used with OverloadedStrings.
 --
 -- >>> "{\"a\": 100, \"b\": 200}" ^? key "a"
--- Just (Number 100)
+-- Just (Number 100.0)
 --
 -- >>> "[1,2,3]" ^? key "a"
 -- Nothing
@@ -280,58 +320,135 @@ key :: AsValue t => Text -> Traversal' t Value
 key i = _Object . ix i
 {-# INLINE key #-}
 
+-- | An indexed Traversal into Object properties
+--
+-- > "{\"a\": 4, \"b\": 7}" ^@.. members
+-- [("a",Number 4.0),("b",Number 7.0)]
+--
+-- > "{\"a\": 4, \"b\": 7}" & members . _Number *~ 10
+-- "{\"a\":40,\"b\":70}"
 members :: AsValue t => IndexedTraversal' Text t Value
-members = _Object . each
+members = _Object . itraversed
 {-# INLINE members #-}
 
 -- | Like 'ix', but for Arrays with Int indexes
 --
 -- >>> "[1,2,3]" ^? nth 1
--- Just (Number 2)
+-- Just (Number 2.0)
 --
 -- >>> "\"a\": 100, \"b\": 200}" ^? nth 1
 -- Nothing
 --
--- >>> "[1,2,3]" & nth 1 .~ (Number 20)
+-- >>> "[1,2,3]" & nth 1 .~ Number 20
 -- "[1,20,3]"
 nth :: AsValue t => Int -> Traversal' t Value
 nth i = _Array . ix i
 {-# INLINE nth #-}
 
+-- | An indexed Traversal into Array elements
+--
+-- >>> "[1,2,3]" ^.. values
+-- [Number 1.0,Number 2.0,Number 3.0]
+--
+-- >>> "[1,2,3]" & values . _Number *~ 10
+-- "[10,20,30]"
 values :: AsValue t => IndexedTraversal' Int t Value
 values = _Array . traversed
 {-# INLINE values #-}
 
+strictUtf8 :: Iso' String Strict.ByteString
+strictUtf8 = packed . strictTextUtf8
+
+strictTextUtf8 :: Iso' Text.Text Strict.ByteString
+strictTextUtf8 = iso StrictText.encodeUtf8 StrictText.decodeUtf8
+
+lazyTextUtf8 :: Iso' LazyText.Text Lazy.ByteString
+lazyTextUtf8 = iso LazyText.encodeUtf8 LazyText.decodeUtf8
+
 class AsJSON t where
-  -- | A Prism into 'Value' on lazy 'ByteString's.
+  -- | '_JSON' is a 'Prism' from something containing JSON to something encoded in that structure
   _JSON :: (FromJSON a, ToJSON a) => Prism' t a
 
+instance AsJSON Strict.ByteString where
+  _JSON = lazy._JSON
+  {-# INLINE _JSON #-}
+
 instance AsJSON Lazy.ByteString where
-  _JSON = prism' encode decode
+  _JSON = prism' encode decodeValue
+    where
+      decodeValue :: (FromJSON a) => Lazy.ByteString -> Maybe a
+      decodeValue s = maybeResult (parse value s) >>= \x -> case fromJSON x of
+        Success v -> Just v
+        _         -> Nothing
   {-# INLINE _JSON #-}
 
 instance AsJSON String where
-  _JSON = iso UTF8.fromString UTF8.toString._JSON
+  _JSON = strictUtf8._JSON
+  {-# INLINE _JSON #-}
+
+instance AsJSON Text where
+  _JSON = strictTextUtf8._JSON
+  {-# INLINE _JSON #-}
+
+instance AsJSON LazyText.Text where
+  _JSON = lazyTextUtf8._JSON
+  {-# INLINE _JSON #-}
+
+instance AsJSON Value where
+  _JSON = prism toJSON $ \x -> case fromJSON x of
+    Success y -> Right y;
+    _         -> Left x
   {-# INLINE _JSON #-}
 
 ------------------------------------------------------------------------------
--- Orphan instances
+-- Some additional tests for prismhood; see https://github.com/ekmett/lens/issues/439.
+------------------------------------------------------------------------------
+
+-- $LazyByteStringTests
+-- >>> "42" ^? (_JSON :: Prism' Lazy.ByteString Value)
+-- Just (Number 42.0)
+--
+-- >>> preview (_Integer :: Prism' Lazy.ByteString Integer) "42"
+-- Just 42
+--
+-- >>> Lazy.unpack (review (_Integer :: Prism' Lazy.ByteString Integer) 42)
+-- "42"
+
+-- $StrictByteStringTests
+-- >>> "42" ^? (_JSON :: Prism' Strict.ByteString Value)
+-- Just (Number 42.0)
+--
+-- >>> preview (_Integer :: Prism' Strict.ByteString Integer) "42"
+-- Just 42
+--
+-- >>> Strict.Char8.unpack (review (_Integer :: Prism' Strict.ByteString Integer) 42)
+-- "42"
+
+-- $StringTests
+-- >>> "42" ^? (_JSON :: Prism' String Value)
+-- Just (Number 42.0)
+--
+-- >>> preview (_Integer :: Prism' String Integer) "42"
+-- Just 42
+--
+-- >>> review (_Integer :: Prism' String Integer) 42
+-- "42"
+
+------------------------------------------------------------------------------
+-- Orphan instances for lens library interop
 ------------------------------------------------------------------------------
 
 type instance Index Value = Text
+
 type instance IxValue Value = Value
-
-instance Applicative f => Ixed f Value where
-  ix i = _Object.ix i
+instance Ixed Value where
+  ix i f (Object o) = Object <$> ix i f o
+  ix _ _ v          = pure v
   {-# INLINE ix #-}
-
-instance (Applicative f, Gettable f) => Contains f Value where
-  contains i f (Object o) = coerce (contains i f o)
-  contains i f _ = coerce (indexed f i False)
-  {-# INLINE contains #-}
 
 instance Plated Value where
   plate f (Object o) = Object <$> traverse f o
   plate f (Array a) = Array <$> traverse f a
   plate _ xs = pure xs
   {-# INLINE plate #-}
+
