@@ -1,11 +1,6 @@
 lens-aeson
 ==========
 
-DEPRECATED
-==========
-
-This project has been deprecated and moved into Lens 4!
-
 [![Build Status](https://secure.travis-ci.org/lens/lens-aeson.png)](http://travis-ci.org/lens/lens-aeson)
 
 The goal of `lens-aeson` is to provide traversals and prisms for
