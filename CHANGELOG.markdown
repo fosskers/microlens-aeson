@@ -1,3 +1,7 @@
+1.0.0.3
+----
+* Move lens upper bound to < 5 like the other packages in the family
+
 1
 ----
 * Module migrated from lens package to Data.Aeson.Lens
