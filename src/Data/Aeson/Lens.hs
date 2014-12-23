@@ -167,7 +167,8 @@ class AsNumber t => AsPrimitive t where
   {-# INLINE _Primitive #-}
 #endif
 
-  -- "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _String
+  -- |
+  -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _String
   -- Just "xyz"
   --
   -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "b" . _String
@@ -179,10 +180,11 @@ class AsNumber t => AsPrimitive t where
   _String = _Primitive.prism StringPrim (\v -> case v of StringPrim s -> Right s; _ -> Left v)
   {-# INLINE _String #-}
 
+  -- |
   -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "b" . _Bool
   -- Just True
   --
-  -- "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _Bool
+  -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _Bool
   -- Nothing
   --
   -- >>> _Bool # True
@@ -194,6 +196,7 @@ class AsNumber t => AsPrimitive t where
   _Bool = _Primitive.prism BoolPrim (\v -> case v of BoolPrim b -> Right b; _ -> Left v)
   {-# INLINE _Bool #-}
 
+  -- |
   -- >>> "{\"a\": \"xyz\", \"b\": null}" ^? key "b" . _Null
   -- Just ()
   --
@@ -322,10 +325,10 @@ key i = _Object . ix i
 
 -- | An indexed Traversal into Object properties
 --
--- > "{\"a\": 4, \"b\": 7}" ^@.. members
+-- >>> "{\"a\": 4, \"b\": 7}" ^@.. members
 -- [("a",Number 4.0),("b",Number 7.0)]
 --
--- > "{\"a\": 4, \"b\": 7}" & members . _Number *~ 10
+-- >>> "{\"a\": 4, \"b\": 7}" & members . _Number *~ 10
 -- "{\"a\":40,\"b\":70}"
 members :: AsValue t => IndexedTraversal' Text t Value
 members = _Object . itraversed
@@ -451,4 +454,3 @@ instance Plated Value where
   plate f (Array a) = Array <$> traverse f a
   plate _ xs = pure xs
   {-# INLINE plate #-}
-
