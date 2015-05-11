@@ -6,7 +6,7 @@ before_install:
   - travis/cabal-apt-install $mode
 
 install:
-  - cabal configure -flib-Werror $mode
+  - cabal configure $mode
   - cabal build
 
 script:
