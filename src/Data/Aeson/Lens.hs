@@ -55,6 +55,7 @@ import Prelude hiding (null)
 
 -- $setup
 -- >>> import Data.ByteString.Char8 as Strict.Char8
+-- >>> import qualified Data.Vector as Vector
 -- >>> :set -XOverloadedStrings
 
 ------------------------------------------------------------------------------
@@ -262,8 +263,8 @@ nonNull = prism id (\v -> if isn't _Null v then Right v else Left v)
 
 class AsPrimitive t => AsValue t where
   -- |
-  -- >>> "[1,2,3]" ^? _Value
-  -- Just (Array (fromList [Number 1.0,Number 2.0,Number 3.0]))
+  -- >>> preview _Value "[1,2,3]" == Just (Array (Vector.fromList [Number 1.0,Number 2.0,Number 3.0]))
+  -- True
   _Value :: Prism' t Value
 
   -- |
@@ -280,8 +281,8 @@ class AsPrimitive t => AsValue t where
   {-# INLINE _Object #-}
 
   -- |
-  -- >>> "[1,2,3]" ^? _Array
-  -- Just (fromList [Number 1.0,Number 2.0,Number 3.0])
+  -- >>> preview _Array "[1,2,3]" == Just (Vector.fromList [Number 1.0,Number 2.0,Number 3.0])
+  -- True
   _Array :: Prism' t (Vector Value)
   _Array = _Value.prism Array (\v -> case v of Array a -> Right a; _ -> Left v)
   {-# INLINE _Array #-}
