@@ -191,7 +191,7 @@ class AsNumber t => AsPrimitive t where
   -- >>> _Bool # True :: String
   -- "true"
   --
-  -- >>> _Bool # False
+  -- >>> _Bool # False :: String
   -- "false"
   _Bool :: Prism' t Bool
   _Bool = _Primitive.prism BoolPrim (\v -> case v of BoolPrim b -> Right b; _ -> Left v)
