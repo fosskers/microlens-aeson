@@ -175,7 +175,7 @@ class AsNumber t => AsPrimitive t where
   -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "b" . _String
   -- Nothing
   --
-  -- >>> _Object._Wrapped # [("key" :: Text, _String # "value")]
+  -- >>> _Object._Wrapped # [("key" :: Text, _String # "value")] :: String
   -- "{\"key\":\"value\"}"
   _String :: Prism' t Text
   _String = _Primitive.prism StringPrim (\v -> case v of StringPrim s -> Right s; _ -> Left v)
@@ -188,7 +188,7 @@ class AsNumber t => AsPrimitive t where
   -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _Bool
   -- Nothing
   --
-  -- >>> _Bool # True
+  -- >>> _Bool # True :: String
   -- "true"
   --
   -- >>> _Bool # False
@@ -204,7 +204,7 @@ class AsNumber t => AsPrimitive t where
   -- >>> "{\"a\": \"xyz\", \"b\": null}" ^? key "a" . _Null
   -- Nothing
   --
-  -- >>> _Null # ()
+  -- >>> _Null # () :: String
   -- "null"
   _Null :: Prism' t ()
   _Null = _Primitive.prism (const NullPrim) (\v -> case v of NullPrim -> Right (); _ -> Left v)
