@@ -16,6 +16,8 @@
 -- Stability :  experimental
 -- Portability: non-portable
 --
+-- This module also exports orphan @'Ixed' 'Value'@ and
+-- @'Plated' 'Value'@ instances.
 --------------------------------------------------------------------
 module Data.Aeson.Lens
   (
