@@ -1,3 +1,9 @@
+1.0.0.5
+----
+* Fix tests to work against vector-0.11
+* Documentation fixes
+* No functional changes since 1.0.0.4
+
 1.0.0.3
 ----
 * Move lens upper bound to < 5 like the other packages in the family

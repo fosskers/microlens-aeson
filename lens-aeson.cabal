@@ -1,6 +1,6 @@
 name:          lens-aeson
 category:      Numeric
-version:       1.0.0.4
+version:       1.0.0.5
 license:       MIT
 cabal-version: >= 1.8
 license-file:  LICENSE
