@@ -39,15 +39,16 @@ flag test-doctests
 
 library
   build-depends:
-    base                 >= 4.5       && < 5,
-    lens                 >= 4.4       && < 5,
-    text                 >= 0.11.1.10 && < 1.3,
-    vector               >= 0.9       && < 0.12,
-    unordered-containers >= 0.2.3     && < 0.3,
-    attoparsec           >= 0.10      && < 0.14,
-    bytestring           >= 0.9       && < 0.11,
-    aeson                >= 0.7.0.5   && < 0.11,
-    scientific           >= 0.3.2     && < 0.4
+                base                 >= 4.5       && < 5,
+                microlens            >= 0.2       && < 0.4,
+                lens                 >= 4.4       && < 5,
+                text                 >= 0.11.1.10 && < 1.3,
+                vector               >= 0.9       && < 0.12,
+                unordered-containers >= 0.2.3     && < 0.3,
+                attoparsec           >= 0.10      && < 0.14,
+                bytestring           >= 0.9       && < 0.11,
+                aeson                >= 0.7.0.5   && < 0.11,
+                scientific           >= 0.3.2     && < 0.4
 
   exposed-modules:
     Data.Aeson.Lens
