@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -59,7 +60,7 @@ import Prelude hiding (null)
 -- >>> :set -XOverloadedStrings
 
 ------------------------------------------------------------------------------
--- Scientific prisms
+-- Scientific Traversals
 ------------------------------------------------------------------------------
 
 class AsNumber t where
@@ -71,7 +72,7 @@ class AsNumber t where
   -- Nothing
   _Number :: Traversal' t Scientific
   default _Number :: AsPrimitive t => Traversal' t Scientific
-  _Number = _Primitive._Number
+  _Number = _Primitive . _Number
   {-# INLINE _Number #-}
 
   -- |
@@ -99,7 +100,8 @@ class AsNumber t where
   {-# INLINE _Integer #-}
 
 instance AsNumber Value where
-  _Number = prism Number $ \v -> case v of Number n -> Right n; _ -> Left v
+  _Number f (Number n) = Number <$> f n
+  _Number _ v = pure v
   {-# INLINE _Number #-}
 
 instance AsNumber Scientific where
@@ -140,7 +142,8 @@ data Primitive
   deriving (Eq,Ord,Show,Data,Typeable)
 
 instance AsNumber Primitive where
-  _Number = prism NumberPrim $ \v -> case v of NumberPrim s -> Right s; _ -> Left v
+  _Number f (NumberPrim n) = NumberPrim <$> f n
+  _Number _ p = pure p
   {-# INLINE _Number #-}
 
 class AsNumber t => AsPrimitive t where
@@ -161,7 +164,7 @@ class AsNumber t => AsPrimitive t where
   -- Just (BoolPrim False)
   _Primitive :: Traversal' t Primitive
   default _Primitive :: AsValue t => Traversal' t Primitive
-  _Primitive = _Value._Primitive
+  _Primitive = _Value . _Primitive
   {-# INLINE _Primitive #-}
 
   -- |
@@ -174,7 +177,9 @@ class AsNumber t => AsPrimitive t where
   -- >>> _Object._Wrapped # [("key" :: Text, _String # "value")] :: String
   -- "{\"key\":\"value\"}"
   _String :: Traversal' t Text
-  _String = _Primitive.prism StringPrim (\v -> case v of StringPrim s -> Right s; _ -> Left v)
+  _String = _Primitive . trav
+    where trav f (StringPrim s) = StringPrim <$> f s
+          trav _ x = pure x
   {-# INLINE _String #-}
 
   -- |
@@ -183,14 +188,10 @@ class AsNumber t => AsPrimitive t where
   --
   -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _Bool
   -- Nothing
-  --
-  -- >>> _Bool # True :: String
-  -- "true"
-  --
-  -- >>> _Bool # False :: String
-  -- "false"
   _Bool :: Traversal' t Bool
-  _Bool = _Primitive.prism BoolPrim (\v -> case v of BoolPrim b -> Right b; _ -> Left v)
+  _Bool = _Primitive . trav
+    where trav f (BoolPrim b) = BoolPrim <$> f b
+          trav _ x = pure x
   {-# INLINE _Bool #-}
 
   -- |
@@ -199,13 +200,11 @@ class AsNumber t => AsPrimitive t where
   --
   -- >>> "{\"a\": \"xyz\", \"b\": null}" ^? key "a" . _Null
   -- Nothing
-  --
-  -- >>> _Null # () :: String
-  -- "null"
   _Null :: Traversal' t ()
-  _Null = _Primitive.prism (const NullPrim) (\v -> case v of NullPrim -> Right (); _ -> Left v)
+  _Null = _Primitive . trav
+    where trav f NullPrim = const NullPrim <$> f ()
+          trav _ x = pure x
   {-# INLINE _Null #-}
-
 
 instance AsPrimitive Value where
   _Primitive = prism fromPrim toPrim
@@ -222,11 +221,17 @@ instance AsPrimitive Value where
       fromPrim NullPrim       = Null
       {-# INLINE fromPrim #-}
   {-# INLINE _Primitive #-}
-  _String = prism String $ \v -> case v of String s -> Right s; _ -> Left v
+
+  _String f (String s) = String <$> f s
+  _String _ v = pure v
   {-# INLINE _String #-}
-  _Bool = prism Bool (\v -> case v of Bool b -> Right b; _ -> Left v)
+
+  _Bool f (Bool b) = Bool <$> f b
+  _Bool _ v = pure v
   {-# INLINE _Bool #-}
-  _Null = prism (const Null) (\v -> case v of Null -> Right (); _ -> Left v)
+
+  _Null f Null = const Null <$> f ()
+  _Null _ v = pure v
   {-# INLINE _Null #-}
 
 instance AsPrimitive Strict.ByteString
@@ -258,7 +263,7 @@ instance AsPrimitive Primitive where
 ------------------------------------------------------------------------------
 
 class AsPrimitive t => AsValue t where
-  -- Colin: Docs here. What is this?
+  -- | Traverse into data that encodes a `Value`
   _Value :: Traversal' t Value
 
   -- |
@@ -267,18 +272,16 @@ class AsPrimitive t => AsValue t where
   --
   -- >>> "{\"a\": {}, \"b\": null}" ^? key "b" . _Object
   -- Nothing
-  --
-  -- >>> _Object._Wrapped # [("key" :: Text, _String # "value")] :: String
-  -- "{\"key\":\"value\"}"
   _Object :: Traversal' t (HashMap Text Value)
-  _Object = _Value.prism Object (\v -> case v of Object o -> Right o; _ -> Left v)
+  _Object = _Value . trav
+    where trav f (Object o) = Object <$> f o
+          trav _ v = pure v
   {-# INLINE _Object #-}
 
-  -- |
-  -- >>> preview _Array "[1,2,3]" == Just (Vector.fromList [Number 1.0,Number 2.0,Number 3.0])
-  -- True
   _Array :: Traversal' t (Vector Value)
-  _Array = _Value.prism Array (\v -> case v of Array a -> Right a; _ -> Left v)
+  _Array = _Value . trav
+    where trav f (Array a) = Array <$> f a
+          trav _ v = pure v
   {-# INLINE _Array #-}
 
 instance AsValue Value where
@@ -294,15 +297,15 @@ instance AsValue Lazy.ByteString where
   {-# INLINE _Value #-}
 
 instance AsValue String where
-  _Value = strictUtf8._JSON
+  _Value = strictUtf8 . _JSON
   {-# INLINE _Value #-}
 
 instance AsValue Text where
-  _Value = strictTextUtf8._JSON
+  _Value = strictTextUtf8 . _JSON
   {-# INLINE _Value #-}
 
 instance AsValue LazyText.Text where
-  _Value = lazyTextUtf8._JSON
+  _Value = lazyTextUtf8 . _JSON
   {-# INLINE _Value #-}
 
 -- |
@@ -354,11 +357,8 @@ values :: AsValue t => Traversal' t Value
 values = _Array . traverse
 {-# INLINE values #-}
 
-strictText :: Lens' String Text.Text
-strictText = lens Text.pack (const Text.unpack)
-
 strictUtf8 :: Lens' String Strict.ByteString
-strictUtf8 = strictText . strictTextUtf8
+strictUtf8 = lens Text.pack (const Text.unpack) . strictTextUtf8
 
 strictTextUtf8 :: Lens' Text.Text Strict.ByteString
 strictTextUtf8 = lens StrictText.encodeUtf8 (const StrictText.decodeUtf8)
@@ -369,37 +369,32 @@ lazyTextUtf8 = lens LazyText.encodeUtf8 (const LazyText.decodeUtf8)
 class AsJSON t where
   -- | '_JSON' is a 'Traversal' from something containing JSON
   -- to something encoded in that structure.
-  _JSON :: (FromJSON a, ToJSON a) => Traversal' t a
+  _JSON :: Traversal' t Value
 
 instance AsJSON Strict.ByteString where
-  _JSON = lazy._JSON
+  _JSON = lazy . _JSON
   {-# INLINE _JSON #-}
 
 instance AsJSON Lazy.ByteString where
-  _JSON = prism' encode decodeValue
-    where
-      decodeValue :: (FromJSON a) => Lazy.ByteString -> Maybe a
-      decodeValue s = maybeResult (parse value s) >>= \x -> case fromJSON x of
-        Success v -> Just v
-        _         -> Nothing
+  _JSON f b = case maybeResult (parse value b) of
+    Just v -> const b <$> f v
+    _      -> pure b
   {-# INLINE _JSON #-}
 
 instance AsJSON String where
-  _JSON = strictUtf8._JSON
+  _JSON = strictUtf8 . _JSON
   {-# INLINE _JSON #-}
 
 instance AsJSON Text where
-  _JSON = strictTextUtf8._JSON
+  _JSON = strictTextUtf8 . _JSON
   {-# INLINE _JSON #-}
 
 instance AsJSON LazyText.Text where
-  _JSON = lazyTextUtf8._JSON
+  _JSON = lazyTextUtf8 . _JSON
   {-# INLINE _JSON #-}
 
 instance AsJSON Value where
-  _JSON = prism toJSON $ \x -> case fromJSON x of
-    Success y -> Right y;
-    _         -> Left x
+  _JSON = id
   {-# INLINE _JSON #-}
 
 ------------------------------------------------------------------------------
