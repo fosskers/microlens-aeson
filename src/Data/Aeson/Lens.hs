@@ -377,7 +377,7 @@ instance AsJSON Strict.ByteString where
 
 instance AsJSON Lazy.ByteString where
   _JSON f b = case maybeResult (parse value b) of
-    Just v -> const b <$> f v
+    Just v -> encode <$> f v
     _      -> pure b
   {-# INLINE _JSON #-}
 
