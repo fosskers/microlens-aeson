@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Data.Aeson.Lens.Internal where
+module Lens.Micro.Aeson.Internal where
 
 import Data.Aeson (Value(..))
 import Data.HashMap.Lazy as HashMap

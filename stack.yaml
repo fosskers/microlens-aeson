@@ -12,7 +12,7 @@ extra-deps: []
 
 # Override default flag values for local packages and extra-deps
 flags:
-  lens-aeson:
+  microlens-aeson:
     test-doctests: true
 
 # Extra package databases containing global packages

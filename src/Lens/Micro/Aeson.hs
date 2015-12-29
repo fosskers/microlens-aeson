@@ -8,18 +8,23 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
---------------------------------------------------------------------
+
 -- |
--- Copyright :  (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
+-- Copyright :  (c) Colin Woodbury 2015, (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
 -- License   :  BSD3
--- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Maintainer:  Colin Woodbury <colingw@gmail.com>
 -- Stability :  experimental
 -- Portability: non-portable
 --
--- This module also exports orphan @'Ixed' 'Value'@ and
--- @'Plated' 'Value'@ instances.
+-- Traversals for Data.Aeson, based on microlens for minimal dependencies.
+-- 
+-- For basic manipulation of Aeson values, full `Prism` functionality
+-- isn't necessary. Since all Prisms are inherently Traversals, we provide
+-- Traversals that mimic the behaviour of the Prisms found in the original
+-- `Data.Lens.Aeson`.
 --------------------------------------------------------------------
-module Data.Aeson.Lens
+
+module Lens.Micro.Aeson
   (
   -- * Numbers
     AsNumber(..)
@@ -37,7 +42,6 @@ module Data.Aeson.Lens
   ) where
 
 import           Data.Aeson
-import           Data.Aeson.Lens.Internal ()
 import           Data.Aeson.Parser (value)
 import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import qualified Data.ByteString as Strict
@@ -52,6 +56,7 @@ import qualified Data.Text.Lazy as LazyText
 import qualified Data.Text.Lazy.Encoding as LazyText
 import           Data.Vector (Vector)
 import           Lens.Micro
+import           Lens.Micro.Aeson.Internal ()
 import           Prelude hiding (null)
 
 -- $setup
