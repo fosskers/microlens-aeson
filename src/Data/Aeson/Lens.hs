@@ -24,7 +24,7 @@ module Data.Aeson.Lens
   -- * Numbers
     AsNumber(..)
   , _Integral
---  , nonNull
+  , nonNull
   -- * Primitive
   , Primitive(..)
   , AsPrimitive(..)
@@ -251,9 +251,10 @@ instance AsPrimitive Primitive where
 --
 -- >>> "{\"a\": \"xyz\", \"b\": null}" ^? key "b" . nonNull
 -- Nothing
---nonNull :: Traversal' Value Value
---nonNull = prism id (\v -> if isn't _Null v then Right v else Left v)
---{-# INLINE nonNull #-}
+nonNull :: Traversal' Value Value
+nonNull _ Null = pure Null
+nonNull f v = _Value f v
+{-# INLINE nonNull #-}
 
 ------------------------------------------------------------------------------
 -- Non-primitive traversals
