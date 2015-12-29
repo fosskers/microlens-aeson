@@ -36,23 +36,23 @@ module Data.Aeson.Lens
   , AsJSON(..)
   ) where
 
-import Control.Applicative
-import Control.Lens
-import Data.Aeson
-import Data.Aeson.Parser (value)
-import Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
-import Data.Scientific (Scientific)
-import qualified Data.Scientific as Scientific
+import           Data.Aeson
+import           Data.Aeson.Lens.Internal ()
+import           Data.Aeson.Parser (value)
+import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import qualified Data.ByteString as Strict
-import Data.ByteString.Lazy.Char8 as Lazy hiding (putStrLn)
-import Data.Data
-import Data.HashMap.Strict (HashMap)
-import Data.Text as Text
-import qualified Data.Text.Lazy as LazyText
+import           Data.ByteString.Lazy.Char8 as Lazy hiding (putStrLn)
+import           Data.Data
+import           Data.HashMap.Strict (HashMap)
+import           Data.Scientific (Scientific)
+import qualified Data.Scientific as Scientific
+import           Data.Text as Text
 import qualified Data.Text.Encoding as StrictText
+import qualified Data.Text.Lazy as LazyText
 import qualified Data.Text.Lazy.Encoding as LazyText
-import Data.Vector (Vector)
-import Prelude hiding (null)
+import           Data.Vector (Vector)
+import           Lens.Micro
+import           Prelude hiding (null)
 
 -- $setup
 -- >>> import Data.ByteString.Char8 as Strict.Char8
@@ -173,9 +173,6 @@ class AsNumber t => AsPrimitive t where
   --
   -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "b" . _String
   -- Nothing
-  --
-  -- >>> _Object._Wrapped # [("key" :: Text, _String # "value")] :: String
-  -- "{\"key\":\"value\"}"
   _String :: Traversal' t Text
   _String = _Primitive . trav
     where trav f (StringPrim s) = StringPrim <$> f s
@@ -360,6 +357,9 @@ values = _Array . traverse
 strictUtf8 :: Lens' String Strict.ByteString
 strictUtf8 = lens Text.pack (const Text.unpack) . strictTextUtf8
 
+lazyUtf8 :: Lens' Strict.ByteString Lazy.ByteString
+lazyUtf8 = lens Lazy.fromStrict (const Lazy.toStrict)
+
 strictTextUtf8 :: Lens' Text.Text Strict.ByteString
 strictTextUtf8 = lens StrictText.encodeUtf8 (const StrictText.decodeUtf8)
 
@@ -372,7 +372,7 @@ class AsJSON t where
   _JSON :: Traversal' t Value
 
 instance AsJSON Strict.ByteString where
-  _JSON = lazy . _JSON
+  _JSON = lazyUtf8 . _JSON
   {-# INLINE _JSON #-}
 
 instance AsJSON Lazy.ByteString where
@@ -431,14 +431,3 @@ instance AsJSON Value where
 -- >>> review (_Integer :: Prism' String Integer) 42
 -- "42"
 
-------------------------------------------------------------------------------
--- Orphan instances for lens library interop
-------------------------------------------------------------------------------
-
-type instance Index Value = Text
-
-type instance IxValue Value = Value
-instance Ixed Value where
-  ix i f (Object o) = Object <$> ix i f o
-  ix _ _ v          = pure v
-  {-# INLINE ix #-}
