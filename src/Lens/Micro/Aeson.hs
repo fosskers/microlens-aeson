@@ -21,7 +21,7 @@
 -- For basic manipulation of Aeson values, full `Prism` functionality
 -- isn't necessary. Since all Prisms are inherently Traversals, we provide
 -- Traversals that mimic the behaviour of the Prisms found in the original
--- `Data.Lens.Aeson`.
+-- Data.Aeson.Lens.
 --------------------------------------------------------------------
 
 module Lens.Micro.Aeson
@@ -329,7 +329,7 @@ key i = _Object . ix i
 -- >>> "{\"a\": 4, \"b\": 7}" ^.. members
 -- [Number 4.0,Number 7.0]
 --
--- >>> "{\"a\": 4, \"b\": 7}" & members . _Number *~ 10
+-- >>> "{\"a\": 4, \"b\": 7}" & members . _Number %~ (* 10)
 -- "{\"a\":40,\"b\":70}"
 members :: AsValue t => Traversal' t Value
 members = _Object . traverse
@@ -354,7 +354,7 @@ nth i = _Array . ix i
 -- >>> "[1,2,3]" ^.. values
 -- [Number 1.0,Number 2.0,Number 3.0]
 --
--- >>> "[1,2,3]" & values . _Number *~ 10
+-- >>> "[1,2,3]" & values . _Number %~ (* 10)
 -- "[10,20,30]"
 values :: AsValue t => Traversal' t Value
 values = _Array . traverse
@@ -408,32 +408,22 @@ instance AsJSON Value where
 ------------------------------------------------------------------------------
 
 -- $LazyByteStringTests
--- >>> "42" ^? (_JSON :: Prism' Lazy.ByteString Value)
+-- >>> ("42" :: Lazy.ByteString) ^? _JSON
 -- Just (Number 42.0)
 --
--- >>> preview (_Integer :: Prism' Lazy.ByteString Integer) "42"
+-- >>> ("42" :: Lazy.ByteString) ^? _Integer
 -- Just 42
---
--- >>> Lazy.unpack (review (_Integer :: Prism' Lazy.ByteString Integer) 42)
--- "42"
 
 -- $StrictByteStringTests
--- >>> "42" ^? (_JSON :: Prism' Strict.ByteString Value)
+-- >>> ("42" :: Strict.ByteString) ^? _JSON
 -- Just (Number 42.0)
 --
--- >>> preview (_Integer :: Prism' Strict.ByteString Integer) "42"
+-- >>> ("42" :: Lazy.ByteString) ^? _Integer
 -- Just 42
---
--- >>> Strict.Char8.unpack (review (_Integer :: Prism' Strict.ByteString Integer) 42)
--- "42"
 
 -- $StringTests
--- >>> "42" ^? (_JSON :: Prism' String Value)
+-- >>> ("42" :: String) ^? _JSON
 -- Just (Number 42.0)
 --
--- >>> preview (_Integer :: Prism' String Integer) "42"
+-- >>> ("42" :: String) ^? _Integer
 -- Just 42
---
--- >>> review (_Integer :: Prism' String Integer) 42
--- "42"
-
