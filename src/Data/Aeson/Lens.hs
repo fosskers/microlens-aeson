@@ -206,20 +206,20 @@ class AsNumber t => AsPrimitive t where
           trav _ x = pure x
   {-# INLINE _Null #-}
 
+-- Helper for the function below.
+fromPrim :: Primitive -> Value
+fromPrim (StringPrim s) = String s
+fromPrim (NumberPrim n) = Number n
+fromPrim (BoolPrim b)   = Bool b
+fromPrim NullPrim       = Null
+{-# INLINE fromPrim #-}
+
 instance AsPrimitive Value where
-  _Primitive = prism fromPrim toPrim
-    where
-      toPrim (String s) = Right $ StringPrim s
-      toPrim (Number n) = Right $ NumberPrim n
-      toPrim (Bool b)   = Right $ BoolPrim b
-      toPrim Null       = Right NullPrim
-      toPrim v          = Left v
-      {-# INLINE toPrim #-}
-      fromPrim (StringPrim s) = String s
-      fromPrim (NumberPrim n) = Number n
-      fromPrim (BoolPrim b)   = Bool b
-      fromPrim NullPrim       = Null
-      {-# INLINE fromPrim #-}
+  _Primitive f (String s) = fromPrim <$> f (StringPrim s)
+  _Primitive f (Number n) = fromPrim <$> f (NumberPrim n)
+  _Primitive f (Bool b)   = fromPrim <$> f (BoolPrim b)
+  _Primitive f Null       = fromPrim <$> f NullPrim
+  _Primitive _ v          = pure v
   {-# INLINE _Primitive #-}
 
   _String f (String s) = String <$> f s
