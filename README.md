@@ -76,3 +76,17 @@ h = "{\"a\":4,\"b\":7}" ^? _Value
 ```
 
 See the Haddock documentation for a full API specification.
+
+Migration from Data.Aeson.Lens
+------------------------------
+The functions provided here are Traversals, not Prisms, therefore
+creation of encoded JSON from Haskell types like:
+
+```haskell
+>>> _Bool # True :: String
+"true"
+```
+
+is no longer possible. Otherwise, if your use cases are strictly like
+those listed in the Usage section above, then you need only to switch
+the import from `Data.Aeson.Lens` to `Lens.Micro.Aeson`.
