@@ -10,11 +10,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- |
+-- Module    :  Lens.Micro.Aeson
 -- Copyright :  (c) Colin Woodbury 2015, (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
 -- License   :  BSD3
 -- Maintainer:  Colin Woodbury <colingw@gmail.com>
--- Stability :  experimental
--- Portability: non-portable
 --
 -- Traversals for Data.Aeson, based on microlens for minimal dependencies.
 -- 
@@ -22,7 +21,6 @@
 -- isn't necessary. Since all Prisms are inherently Traversals, we provide
 -- Traversals that mimic the behaviour of the Prisms found in the original
 -- Data.Aeson.Lens.
---------------------------------------------------------------------
 
 module Lens.Micro.Aeson
   (
@@ -68,6 +66,7 @@ import           Prelude hiding (null)
 -- Scientific Traversals
 ------------------------------------------------------------------------------
 
+-- | Traverse into various number types.
 class AsNumber t where
   -- |
   -- >>> "[1, \"x\"]" ^? nth 0 . _Number
@@ -151,6 +150,7 @@ instance AsNumber Primitive where
   _Number _ p = pure p
   {-# INLINE _Number #-}
 
+-- | Traverse into various JSON primatives.
 class AsNumber t => AsPrimitive t where
   -- |
   -- >>> "[1, \"x\", null, true, false]" ^? nth 0 . _Primitive
@@ -265,6 +265,7 @@ nonNull f v = _Value f v
 -- Non-primitive traversals
 ------------------------------------------------------------------------------
 
+-- | Traverse into JSON Objects and Arrays.
 class AsPrimitive t => AsValue t where
   -- | Traverse into data that encodes a `Value`
   _Value :: Traversal' t Value
@@ -372,6 +373,7 @@ strictTextUtf8 = lens StrictText.encodeUtf8 (const StrictText.decodeUtf8)
 lazyTextUtf8 :: Lens' LazyText.Text Lazy.ByteString
 lazyTextUtf8 = lens LazyText.encodeUtf8 (const LazyText.decodeUtf8)
 
+-- | Traverse into actual encoded JSON.
 class AsJSON t where
   -- | '_JSON' is a 'Traversal' from something containing JSON
   -- to something encoded in that structure.
