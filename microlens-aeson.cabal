@@ -18,12 +18,14 @@ synopsis:      Law-abiding lenses for Aeson, using microlens.
 description:   Law-abiding lenses for Aeson, using microlens.
 
 extra-source-files:
-  .travis.yml
-  .ghci
-  .gitignore
-  AUTHORS.md
-  README.md
-  CHANGELOG.md
+                   .travis.yml
+                   .ghci
+                   .gitignore
+                   AUTHORS.md
+                   README.md
+                   CHANGELOG.md
+                   microlens-aeson.png
+                   lens-aeson.png
 
 source-repository head
   type: git

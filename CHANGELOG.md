@@ -1,6 +1,7 @@
 2.0.0
 -----
 * Complete conversion to `microlens`
+* All `Prism` are now `Traversal`
 
 1.0.0.5
 -------
