@@ -10,6 +10,14 @@ while obeying the `Traversal` laws.
 `microlens-aeson` is derived from `lens-aeson`, but is based upon `microlens`
 to reduce the amount of dependencies involved.
 
+Here is the dependency graph for `lens-aeson`:
+
+![lens-aeson dependencies](lens-aeson.png)
+
+And that for `microlens-aeson`:
+
+![microlens-aeson dependencies](microlens-aeson.png)
+
 Usage
 -----
 `microlens-aeson` provides Traversals into both lazy and strict variants

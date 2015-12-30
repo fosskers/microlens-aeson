@@ -21,10 +21,9 @@ extra-source-files:
   .travis.yml
   .ghci
   .gitignore
-  .vim.custom
-  AUTHORS.markdown
-  README.markdown
-  CHANGELOG.markdown
+  AUTHORS.md
+  README.md
+  CHANGELOG.md
 
 source-repository head
   type: git
