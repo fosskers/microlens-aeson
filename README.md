@@ -62,7 +62,7 @@ f = ("{\"a\": 100, \"b\": 200}" :: Text) ^? key "a"  -- Just (Number 100.0)
 -----------------------------------
 -- Aeson `Value`s from encoded JSON
 -----------------------------------
-g :: Text
+g :: Maybe Text
 g = "{\"a\":4,\"b\":7}" ^? _Value
 -- Just (Object (fromList [("a",Number 4.0),("b",Number 7.0)]))
 ```
