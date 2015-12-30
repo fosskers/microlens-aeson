@@ -35,7 +35,7 @@ import Lens.Micro.Aeson
 --------------------------
 -- | Optionally getting one value
 a :: Maybe Int
-a = ("37" :: Text) ^? _Integer  -- Just 42
+a = ("37" :: Text) ^? _Integer  -- Just 37
 
 -- | Setting one value within encoded JSON
 b :: Maybe Text
