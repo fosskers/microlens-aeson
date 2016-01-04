@@ -40,7 +40,6 @@ module Lens.Micro.Aeson
   ) where
 
 import           Data.Aeson
-import           Data.Aeson.Parser (value)
 import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import qualified Data.ByteString as Strict
 import           Data.ByteString.Lazy.Char8 as Lazy hiding (putStrLn)
@@ -377,16 +376,17 @@ lazyTextUtf8 = lens LazyText.encodeUtf8 (const LazyText.decodeUtf8)
 class AsJSON t where
   -- | '_JSON' is a 'Traversal' from something containing JSON
   -- to something encoded in that structure.
-  _JSON :: Traversal' t Value
+  _JSON :: (FromJSON a, ToJSON a) => Traversal' t a
 
 instance AsJSON Strict.ByteString where
   _JSON = lazyUtf8 . _JSON
   {-# INLINE _JSON #-}
 
 instance AsJSON Lazy.ByteString where
-  _JSON f b = case maybeResult (parse value b) of
-    Just v -> encode <$> f v
-    _      -> pure b
+  _JSON f b = maybe (pure b) (\v' -> encode <$> f v') v
+    where v = maybeResult (parse json b) >>= \x -> case fromJSON x of
+            Success x' -> Just x'
+            _ -> Nothing
   {-# INLINE _JSON #-}
 
 instance AsJSON String where
@@ -402,29 +402,27 @@ instance AsJSON LazyText.Text where
   {-# INLINE _JSON #-}
 
 instance AsJSON Value where
-  _JSON = id
+  _JSON f v = case fromJSON v of
+    Success v' -> toJSON <$> f v'
+    _ -> pure v
   {-# INLINE _JSON #-}
 
-------------------------------------------------------------------------------
--- Some additional tests for prismhood; see https://github.com/ekmett/lens/issues/439.
-------------------------------------------------------------------------------
-
 -- $LazyByteStringTests
--- >>> ("42" :: Lazy.ByteString) ^? _JSON
+-- >>> ("42" :: Lazy.ByteString) ^? (_JSON :: Traversal' Lazy.ByteString Value)
 -- Just (Number 42.0)
 --
 -- >>> ("42" :: Lazy.ByteString) ^? _Integer
 -- Just 42
 
 -- $StrictByteStringTests
--- >>> ("42" :: Strict.ByteString) ^? _JSON
+-- >>> ("42" :: Strict.ByteString) ^? (_JSON :: Traversal' Strict.ByteString Value)
 -- Just (Number 42.0)
 --
 -- >>> ("42" :: Lazy.ByteString) ^? _Integer
 -- Just 42
 
 -- $StringTests
--- >>> ("42" :: String) ^? _JSON
+-- >>> ("42" :: String) ^? (_JSON :: Traversal' String Value)
 -- Just (Number 42.0)
 --
 -- >>> ("42" :: String) ^? _Integer

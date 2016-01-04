@@ -1,3 +1,8 @@
+2.1.0
+-----
+* Restored original `AsJSON` and `_JSON` typing
+* Bumped `microlens` dep max
+
 2.0.0
 -----
 * Complete conversion to `microlens`
