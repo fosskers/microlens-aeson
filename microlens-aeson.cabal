@@ -1,6 +1,6 @@
 name:          microlens-aeson
 category:      Numeric
-version:       2.1.0
+version:       2.1.1
 license:       MIT
 cabal-version: >= 1.8
 license-file:  LICENSE
@@ -38,7 +38,7 @@ flag test-doctests
 
 library
   build-depends:
-                  aeson                >= 0.7.0.5   && < 0.11
+                  aeson                >= 0.7.0.5   && < 0.12
                 , attoparsec           >= 0.10      && < 0.14
                 , base                 >= 4.5       && < 5
                 , bytestring           >= 0.9       && < 0.11
