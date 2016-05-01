@@ -13,8 +13,7 @@ addons:
 # The different configurations we want to test. You could also do things like
 # change flags or use --stack-yaml to point to a different file.
 env:
-- ARGS="--resolver lts-5.2"
-- ARGS="--resolver nightly-2015-12-16"
+- ARGS="--resolver lts-5.14"
 
 before_install:
 # Download and unpack the stack executable
@@ -25,7 +24,11 @@ before_install:
 # This line does all of the work: installs GHC if necessary, build the library,
 # executables, and test suites, and runs the test suites. --no-terminal works
 # around some quirks in Travis's terminal implementation.
-script: stack $ARGS --no-terminal --install-ghc test
+script: stack $ARGS --no-terminal --install-ghc test --coverage
+
+after_script:
+  - travis_retry curl -L https://github.com/rubik/stack-hpc-coveralls/releases/download/v0.0.3.0/shc-linux-x64-7.10.3.tar.bz2 | tar -xj
+  - ./shc microlens-aeson doctests
 
 # Caching so the next build will be fast too.
 cache:
