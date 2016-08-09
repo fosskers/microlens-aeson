@@ -13,7 +13,7 @@ addons:
 # The different configurations we want to test. You could also do things like
 # change flags or use --stack-yaml to point to a different file.
 env:
-- ARGS="--resolver lts-5.14"
+- ARGS="--resolver nightly-2016-08-01"
 
 before_install:
 # Download and unpack the stack executable
@@ -27,8 +27,8 @@ before_install:
 script: stack $ARGS --no-terminal --install-ghc test --coverage
 
 after_script:
-  - travis_retry curl -L https://github.com/rubik/stack-hpc-coveralls/releases/download/v0.0.3.0/shc-linux-x64-7.10.3.tar.bz2 | tar -xj
-  - ./shc microlens-aeson doctests
+  - travis_retry curl -L https://github.com/rubik/stack-hpc-coveralls/releases/download/v0.0.4.0/shc-linux-x64-8.0.1.tar.bz2 | tar -xj
+  - ./shc microlens-aeson microlens-aeson-test
 
 # Caching so the next build will be fast too.
 cache:
