@@ -1,6 +1,6 @@
 name:          microlens-aeson
 category:      Numeric
-version:       2.1.1.3
+version:       2.2.0
 license:       MIT
 cabal-version: >= 1.8
 license-file:  LICENSE

@@ -1,3 +1,7 @@
+2.2.0
+-----
+- Various fixes to dependency version bounds
+
 2.1.0
 -----
 * Restored original `AsJSON` and `_JSON` typing
@@ -33,4 +37,3 @@
 0.1
 ---
 * Repository initialized
-

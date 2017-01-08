@@ -2,7 +2,6 @@ microlens-aeson
 ===============
 
 [![Build Status](https://travis-ci.org/fosskers/microlens-aeson.svg?branch=master)](https://travis-ci.org/fosskers/microlens-aeson)
-[![Coverage Status](https://coveralls.io/repos/github/fosskers/microlens-aeson/badge.svg?branch=master)](https://coveralls.io/github/fosskers/microlens-aeson?branch=master)
 [![Hackage](https://img.shields.io/hackage/v/microlens-aeson.svg?style=flat)](https://hackage.haskell.org/package/microlens-aeson)
 [![Stackage Nightly](http://stackage.org/package/microlens-aeson/badge/nightly)](http://stackage.org/nightly/package/microlens-aeson)
 [![Stackage LTS](http://stackage.org/package/microlens-aeson/badge/lts)](http://stackage.org/lts/package/microlens-aeson)
