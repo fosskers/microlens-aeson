@@ -149,7 +149,7 @@ instance AsNumber Primitive where
   _Number _ p = pure p
   {-# INLINE _Number #-}
 
--- | Traverse into various JSON primatives.
+-- | Traverse into various JSON primitives.
 class AsNumber t => AsPrimitive t where
   -- |
   -- >>> "[1, \"x\", null, true, false]" ^? nth 0 . _Primitive
