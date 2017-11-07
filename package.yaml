@@ -1,5 +1,5 @@
 name: microlens-aeson
-version: '2.2.0.1'
+version: '2.2.0.2'
 synopsis: Law-abiding lenses for Aeson, using microlens.
 description: Law-abiding lenses for Aeson, using microlens.
 category: Numeric
