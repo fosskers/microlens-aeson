@@ -3,9 +3,6 @@
 module Main where
 
 import           Data.Aeson
-import           Data.ByteString.Char8 as Strict.Char8
-import           Data.ByteString.Lazy.Char8 as Lazy
-import qualified Data.Vector as Vector
 import           Lens.Micro
 import           Lens.Micro.Aeson
 import           Test.Tasty
