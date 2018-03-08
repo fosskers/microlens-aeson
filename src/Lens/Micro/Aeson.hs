@@ -1,22 +1,16 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE Trustworthy #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 {-# LANGUAGE DefaultSignatures #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- |
 -- Module    :  Lens.Micro.Aeson
--- Copyright :  (c) Colin Woodbury 2015, (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
+-- Copyright :  (c) Colin Woodbury 2015 - 2018, (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
 -- License   :  BSD3
 -- Maintainer:  Colin Woodbury <colingw@gmail.com>
 --
 -- Traversals for Data.Aeson, based on microlens for minimal dependencies.
--- 
+--
 -- For basic manipulation of Aeson values, full `Prism` functionality
 -- isn't necessary. Since all Prisms are inherently Traversals, we provide
 -- Traversals that mimic the behaviour of the Prisms found in the original
@@ -39,12 +33,13 @@ module Lens.Micro.Aeson
   , AsJSON(..)
   ) where
 
+import           Control.DeepSeq (NFData)
 import           Data.Aeson
 import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import qualified Data.ByteString as Strict
-import           Data.ByteString.Lazy.Char8 as Lazy hiding (putStrLn)
-import           Data.Data
+import           Data.ByteString.Lazy.Char8 as Lazy
 import           Data.HashMap.Strict (HashMap)
+import           Data.Hashable
 import           Data.Scientific (Scientific)
 import qualified Data.Scientific as Scientific
 import           Data.Text as Text
@@ -52,14 +47,10 @@ import qualified Data.Text.Encoding as StrictText
 import qualified Data.Text.Lazy as LazyText
 import qualified Data.Text.Lazy.Encoding as LazyText
 import           Data.Vector (Vector)
+import           GHC.Generics
 import           Lens.Micro
 import           Lens.Micro.Aeson.Internal ()
-import           Prelude hiding (null)
-
--- $setup
--- >>> import Data.ByteString.Char8 as Strict.Char8
--- >>> import qualified Data.Vector as Vector
--- >>> :set -XOverloadedStrings
+import           Prelude
 
 ------------------------------------------------------------------------------
 -- Scientific Traversals
@@ -142,7 +133,7 @@ data Primitive
   | NumberPrim !Scientific
   | BoolPrim !Bool
   | NullPrim
-  deriving (Eq,Ord,Show,Data,Typeable)
+  deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
 instance AsNumber Primitive where
   _Number f (NumberPrim n) = NumberPrim <$> f n
@@ -383,7 +374,7 @@ instance AsJSON Strict.ByteString where
   {-# INLINE _JSON #-}
 
 instance AsJSON Lazy.ByteString where
-  _JSON f b = maybe (pure b) (\v' -> encode <$> f v') v
+  _JSON f b = maybe (pure b) (fmap encode . f) v
     where v = maybeResult (parse json b) >>= \x -> case fromJSON x of
             Success x' -> Just x'
             _ -> Nothing
