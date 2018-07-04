@@ -65,6 +65,6 @@ benchmarks:
       - -O2
     dependencies:
       - microlens-aeson
-      - criterion >= 1.2 && < 1.5
+      - criterion >= 1.2 && < 1.6
       - lens-aeson >= 1.0
-      - lens >= 4.15 && < 4.17
+      - lens >= 4.15 && < 4.18
