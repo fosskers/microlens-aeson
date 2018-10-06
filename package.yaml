@@ -19,12 +19,10 @@ extra-source-files:
   - lens-aeson.png
 
 ghc-options:
-  - -fwarn-unused-imports
-  - -fwarn-unused-binds
-  - -fwarn-name-shadowing
-  - -fwarn-unused-matches
-  - -fwarn-incomplete-patterns
-  - -fwarn-incomplete-uni-patterns
+  - -Wall
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wredundant-constraints
 
 dependencies:
   - base >=4.8 && <5

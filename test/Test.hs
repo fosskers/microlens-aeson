@@ -26,8 +26,8 @@ suite = testGroup "Unit Tests"
     , testCase "" $ ("42" ^? _Integer) @?= Just 42
     ]
   , testGroup "Conversion Traversals"
-    [ testCase "" $ ("[10]" ^? nth 0 . _Integral) @?= Just 10
-    , testCase "" $ ("[10.5]" ^? nth 0 . _Integral) @?= Just 10
+    [ testCase "" $ ("[10]" ^? nth 0 . _Integral) @?= Just (10 :: Int)
+    , testCase "" $ ("[10.5]" ^? nth 0 . _Integral) @?= Just (10 :: Int)
     ]
   , testGroup "Nulls and Primitives"
     [ testCase "" $ ("[1, \"x\", null, true, false]" ^? nth 0 . _Primitive) @?= Just (NumberPrim 1.0)
