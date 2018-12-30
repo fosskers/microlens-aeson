@@ -1,7 +1,12 @@
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RankNTypes        #-}
+
+#if MIN_VERSION_base(4,8,0)
+{-# LANGUAGE DeriveAnyClass    #-}
+#endif
 
 -- |
 -- Module    :  Lens.Micro.Aeson
@@ -33,13 +38,15 @@ module Lens.Micro.Aeson
   , AsJSON(..)
   ) where
 
-import           Control.DeepSeq (NFData)
+#if !MIN_VERSION_base(4,8,0)
+import           Control.Applicative
+import           Data.Traversable (traverse)
+#endif
 import           Data.Aeson
 import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import qualified Data.ByteString as Strict
 import           Data.ByteString.Lazy.Char8 as Lazy
 import           Data.HashMap.Strict (HashMap)
-import           Data.Hashable
 import           Data.Scientific (Scientific)
 import qualified Data.Scientific as Scientific
 import           Data.Text as Text
@@ -51,6 +58,10 @@ import           GHC.Generics
 import           Lens.Micro
 import           Lens.Micro.Aeson.Internal ()
 import           Prelude
+
+#if MIN_VERSION_base(4,8,0)
+import           Data.Hashable
+#endif
 
 ------------------------------------------------------------------------------
 -- Scientific Traversals
@@ -95,7 +106,7 @@ class AsNumber t where
 
 instance AsNumber Value where
   _Number f (Number n) = Number <$> f n
-  _Number _ v = pure v
+  _Number _ v          = pure v
   {-# INLINE _Number #-}
 
 instance AsNumber Scientific where
@@ -133,11 +144,16 @@ data Primitive
   | NumberPrim !Scientific
   | BoolPrim !Bool
   | NullPrim
-  deriving (Eq, Ord, Show, Generic, NFData, Hashable)
+#if !MIN_VERSION_base(4,8,0)
+  deriving (Eq, Ord, Show, Generic)
+#endif
+#if MIN_VERSION_base(4,8,0)
+  deriving (Eq, Ord, Show, Generic, Hashable)
+#endif
 
 instance AsNumber Primitive where
   _Number f (NumberPrim n) = NumberPrim <$> f n
-  _Number _ p = pure p
+  _Number _ p              = pure p
   {-# INLINE _Number #-}
 
 -- | Traverse into various JSON primitives.
@@ -171,7 +187,7 @@ class AsNumber t => AsPrimitive t where
   _String :: Traversal' t Text
   _String = _Primitive . trav
     where trav f (StringPrim s) = StringPrim <$> f s
-          trav _ x = pure x
+          trav _ x              = pure x
   {-# INLINE _String #-}
 
   -- |
@@ -183,7 +199,7 @@ class AsNumber t => AsPrimitive t where
   _Bool :: Traversal' t Bool
   _Bool = _Primitive . trav
     where trav f (BoolPrim b) = BoolPrim <$> f b
-          trav _ x = pure x
+          trav _ x            = pure x
   {-# INLINE _Bool #-}
 
   -- |
@@ -195,7 +211,7 @@ class AsNumber t => AsPrimitive t where
   _Null :: Traversal' t ()
   _Null = _Primitive . trav
     where trav f NullPrim = const NullPrim <$> f ()
-          trav _ x = pure x
+          trav _ x        = pure x
   {-# INLINE _Null #-}
 
 -- Helper for the function below.
@@ -215,15 +231,15 @@ instance AsPrimitive Value where
   {-# INLINE _Primitive #-}
 
   _String f (String s) = String <$> f s
-  _String _ v = pure v
+  _String _ v          = pure v
   {-# INLINE _String #-}
 
   _Bool f (Bool b) = Bool <$> f b
-  _Bool _ v = pure v
+  _Bool _ v        = pure v
   {-# INLINE _Bool #-}
 
   _Null f Null = const Null <$> f ()
-  _Null _ v = pure v
+  _Null _ v    = pure v
   {-# INLINE _Null #-}
 
 instance AsPrimitive Strict.ByteString
@@ -248,7 +264,7 @@ instance AsPrimitive Primitive where
 -- Nothing
 nonNull :: Traversal' Value Value
 nonNull _ Null = pure Null
-nonNull f v = _Value f v
+nonNull f v    = _Value f v
 {-# INLINE nonNull #-}
 
 ------------------------------------------------------------------------------
@@ -269,13 +285,13 @@ class AsPrimitive t => AsValue t where
   _Object :: Traversal' t (HashMap Text Value)
   _Object = _Value . trav
     where trav f (Object o) = Object <$> f o
-          trav _ v = pure v
+          trav _ v          = pure v
   {-# INLINE _Object #-}
 
   _Array :: Traversal' t (Vector Value)
   _Array = _Value . trav
     where trav f (Array a) = Array <$> f a
-          trav _ v = pure v
+          trav _ v         = pure v
   {-# INLINE _Array #-}
 
 instance AsValue Value where
@@ -377,7 +393,7 @@ instance AsJSON Lazy.ByteString where
   _JSON f b = maybe (pure b) (fmap encode . f) v
     where v = maybeResult (parse json b) >>= \x -> case fromJSON x of
             Success x' -> Just x'
-            _ -> Nothing
+            _          -> Nothing
   {-# INLINE _JSON #-}
 
 instance AsJSON String where
@@ -395,7 +411,7 @@ instance AsJSON LazyText.Text where
 instance AsJSON Value where
   _JSON f v = case fromJSON v of
     Success v' -> toJSON <$> f v'
-    _ -> pure v
+    _          -> pure v
   {-# INLINE _JSON #-}
 
 -- $LazyByteStringTests
