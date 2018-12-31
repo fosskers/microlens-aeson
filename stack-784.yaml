@@ -1,0 +1,7 @@
+resolver: lts-2.22
+
+packages:
+  - '.'
+
+extra-deps:
+  - microlens-0.4.10@sha256:9acd6f6e604f1db35db6a9b2195f0c6e72a28f5260dfba0681b21a2d2274bcc1
