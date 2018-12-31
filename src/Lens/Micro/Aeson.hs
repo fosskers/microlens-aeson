@@ -16,10 +16,9 @@
 --
 -- Traversals for Data.Aeson, based on microlens for minimal dependencies.
 --
--- For basic manipulation of Aeson values, full `Prism` functionality
--- isn't necessary. Since all Prisms are inherently Traversals, we provide
--- Traversals that mimic the behaviour of the Prisms found in the original
--- Data.Aeson.Lens.
+-- For basic manipulation of Aeson values, full `Prism` functionality isn't
+-- necessary. Since all Prisms are inherently Traversals, we provide Traversals
+-- that mimic the behaviour of the Prisms found in the original Data.Aeson.Lens.
 
 module Lens.Micro.Aeson
   (

@@ -1,3 +1,10 @@
+2.3.0.1
+-----
+- Enable compilation with GHC `7.8` (`base-4.7`). Only when this version of
+  `base` is used does our type `Primitive` lose its `Hashable` instance, due to
+  a lack of `DeriveAnyClass`. Otherwise, the API is unchanged from
+  `microlens-aeson-2.3.0`.
+
 2.2.0
 -----
 - Various fixes to dependency version bounds
