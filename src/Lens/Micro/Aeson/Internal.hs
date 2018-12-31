@@ -1,5 +1,7 @@
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies      #-}
+
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- |
@@ -15,6 +17,9 @@
 
 module Lens.Micro.Aeson.Internal where
 
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative
+#endif
 import Data.Aeson (Value(..))
 import Data.HashMap.Lazy as HashMap
 import Data.Text (Text)

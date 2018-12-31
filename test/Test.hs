@@ -1,14 +1,12 @@
---{-# LANGUAGE OverloadedStrings #-}
-
 module Main where
 
 import           Data.Aeson
+import qualified Data.HashMap.Strict as HMS
+import qualified Data.Text as T
 import           Lens.Micro
 import           Lens.Micro.Aeson
 import           Test.Tasty
 import           Test.Tasty.HUnit
-import qualified Data.HashMap.Strict as HMS
-import qualified Data.Text as T
 
 ---
 

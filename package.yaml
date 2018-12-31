@@ -20,12 +20,16 @@ extra-source-files:
 
 ghc-options:
   - -Wall
-  - -Wincomplete-record-updates
-  - -Wincomplete-uni-patterns
-  - -Wredundant-constraints
+  - -fwarn-incomplete-record-updates
+  - -fwarn-incomplete-uni-patterns
+
+# when:
+#   - condition: impl(ghc > 7.8)
+#     ghc-options:
+#       - -Wredundant-constraints
 
 dependencies:
-  - base >=4.8 && <5
+  - base >=4.7 && <5
   - aeson >=0.7.0.5 && <1.5
   - bytestring
   - deepseq
@@ -54,15 +58,15 @@ tests:
       - tasty >=0.10.1.2
       - tasty-hunit >=0.9.2
 
-benchmarks:
-  microlens-aeson-bench:
-    main: Bench.hs
-    source-dirs: bench
-    ghc-options:
-      - -threaded
-      - -O2
-    dependencies:
-      - microlens-aeson
-      - criterion >= 1.2 && < 1.6
-      - lens-aeson >= 1.0
-      - lens >= 4.15 && < 4.18
+# benchmarks:
+#   microlens-aeson-bench:
+#     main: Bench.hs
+#     source-dirs: bench
+#     ghc-options:
+#       - -threaded
+#       - -O2
+#     dependencies:
+#       - microlens-aeson
+#       - criterion >= 1.2 && < 1.6
+#       - lens-aeson >= 1.0
+#       - lens >= 4.15 && < 4.18
