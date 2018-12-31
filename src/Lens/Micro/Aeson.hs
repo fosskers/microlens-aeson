@@ -43,6 +43,7 @@ import           Control.Applicative
 import           Data.Traversable (traverse)
 #endif
 import           Data.Aeson
+import           Data.Aeson.Parser (value)
 import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import qualified Data.ByteString as Strict
 import           Data.ByteString.Lazy.Char8 as Lazy
@@ -391,7 +392,7 @@ instance AsJSON Strict.ByteString where
 
 instance AsJSON Lazy.ByteString where
   _JSON f b = maybe (pure b) (fmap encode . f) v
-    where v = maybeResult (parse json b) >>= \x -> case fromJSON x of
+    where v = maybeResult (parse value b) >>= \x -> case fromJSON x of
             Success x' -> Just x'
             _          -> Nothing
   {-# INLINE _JSON #-}
