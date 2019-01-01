@@ -24,7 +24,7 @@ ghc-options:
   - -fwarn-incomplete-uni-patterns
 
 dependencies:
-  - base >=4.7 && <5
+  - base >=4.6 && <5
   - aeson >=0.7.0.5 && <1.5
   - bytestring
   - deepseq
