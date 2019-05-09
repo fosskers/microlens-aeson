@@ -1,3 +1,7 @@
+2.3.0.2
+-----
+- Bumping bounds, cleaning code.
+
 2.3.0.1
 -----
 - Enable compilation with GHC `7.8` (`base-4.7`). Only when this version of
