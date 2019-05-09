@@ -1,3 +1,7 @@
+2.3.0.3
+-----
+- Readd 7.10 support. Forgive the spam.
+
 2.3.0.2
 -----
 - Bumping bounds, cleaning code.
