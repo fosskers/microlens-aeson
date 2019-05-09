@@ -210,7 +210,7 @@ class AsNumber t => AsPrimitive t where
   -- Nothing
   _Null :: Traversal' t ()
   _Null = _Primitive . trav
-    where trav f NullPrim = const NullPrim <$> f ()
+    where trav f NullPrim = NullPrim <$ f ()
           trav _ x        = pure x
   {-# INLINE _Null #-}
 
@@ -238,7 +238,7 @@ instance AsPrimitive Value where
   _Bool _ v        = pure v
   {-# INLINE _Bool #-}
 
-  _Null f Null = const Null <$> f ()
+  _Null f Null = Null <$ f ()
   _Null _ v    = pure v
   {-# INLINE _Null #-}
 
