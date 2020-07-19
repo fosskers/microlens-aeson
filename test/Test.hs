@@ -7,6 +7,7 @@ import           Lens.Micro
 import           Lens.Micro.Aeson
 import           Test.Tasty
 import           Test.Tasty.HUnit
+import           Data.List
 
 ---
 
@@ -48,8 +49,8 @@ suite = testGroup "Unit Tests"
     , testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (T.pack "b") . _Object) @?= Nothing
     , testCase "" $ ("{\"a\": 100, \"b\": 200}" ^? key (T.pack "a")) @?= Just (Number 100.0)
     , testCase "" $ ("[1,2,3]" ^? key (T.pack "a")) @?= Nothing
-    , testCase "" $ ("{\"a\": 4, \"b\": 7}" ^.. members) @?= [Number 4.0,Number 7.0]
-    , testCase "" $ ("{\"a\": 4, \"b\": 7}" & members . _Number %~ (* 10)) @?= "{\"a\":40,\"b\":70}"
+    , testCase "" $ (sort ("{\"a\": 4, \"b\": 7}" ^.. members . _Number)) @?= [4.0, 7.0]
+    , testCase "" $ ("{\"a\": 4}" & members . _Number %~ (* 10)) @?= "{\"a\":40}"
     , testCase "" $ ("[1,2,3]" ^? nth 1) @?= Just (Number 2.0)
     , testCase "" $ ("{\"a\": 100, \"b\": 200}" ^? nth 1) @?= Nothing
     , testCase "" $ ("[1,2,3]" & nth 1 .~ Number 20) @?= "[1,20,3]"
