@@ -10,7 +10,7 @@
 
 -- |
 -- Module    :  Lens.Micro.Aeson
--- Copyright :  (c) Colin Woodbury 2015 - 2018, (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
+-- Copyright :  (c) Colin Woodbury 2015-2021, (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
 -- License   :  BSD3
 -- Maintainer:  Colin Woodbury <colingw@gmail.com>
 --
@@ -42,6 +42,7 @@ import           Control.Applicative
 import           Data.Traversable (traverse)
 #endif
 import           Data.Aeson
+import qualified Data.Aeson.KeyMap as KM
 import           Data.Aeson.Parser (value)
 import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import qualified Data.ByteString as Strict
@@ -284,8 +285,9 @@ class AsPrimitive t => AsValue t where
   -- Nothing
   _Object :: Traversal' t (HashMap Text Value)
   _Object = _Value . trav
-    where trav f (Object o) = Object <$> f o
-          trav _ v          = pure v
+    where
+      trav f (Object o) = Object . KM.fromHashMapText <$> f (KM.toHashMapText o)
+      trav _ v          = pure v
   {-# INLINE _Object #-}
 
   _Array :: Traversal' t (Vector Value)

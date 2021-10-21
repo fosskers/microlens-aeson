@@ -1,6 +1,7 @@
 module Main where
 
 import           Data.Aeson
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.HashMap.Strict as HMS
 import qualified Data.Text as T
 import           Lens.Micro
@@ -41,7 +42,7 @@ suite = testGroup "Unit Tests"
     , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (T.pack "b") . _Null) @?= Just ()
     , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (T.pack "a") . _Null) @?= Nothing
     , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (T.pack "a") . nonNull) @?= Just (String $ T.pack "xyz")
-    , testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (T.pack "a") . nonNull) @?= Just (Object (HMS.fromList []))
+    , testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (T.pack "a") . nonNull) @?= Just (Object . KM.fromHashMapText $ HMS.fromList [])
     , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (T.pack "b") . nonNull) @?= Nothing
     ]
   , testGroup "Non-primitive Traversals"
