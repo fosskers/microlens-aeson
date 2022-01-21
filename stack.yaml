@@ -1,4 +1,4 @@
-resolver: lts-18.18
+resolver: lts-18.22
 
 flags:
   these:
@@ -7,9 +7,11 @@ flags:
     assoc: false
 
 extra-deps:
-  - aeson-2.0.2.0
+  - aeson-2.0.3.0
+  - attoparsec-0.14.4
   - OneTuple-0.3.1
-  - hashable-1.4.0.1
+  - hashable-1.4.0.2
   - semialign-1.2.0.1
-  - text-short-0.1.4
+  - text-2.0
+  - text-short-0.1.5
   - time-compat-1.9.6.1
