@@ -48,6 +48,7 @@ import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import qualified Data.ByteString as Strict
 import           Data.ByteString.Lazy.Char8 as Lazy
 import           Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HM
 import           Data.Scientific (Scientific)
 import qualified Data.Scientific as Scientific
 import           Data.Text as Text
@@ -55,6 +56,7 @@ import qualified Data.Text.Encoding as StrictText
 import qualified Data.Text.Lazy as LazyText
 import qualified Data.Text.Lazy.Encoding as LazyText
 import           Data.Vector (Vector)
+import qualified Data.Vector as V
 import           GHC.Generics
 import           Lens.Micro
 import           Lens.Micro.Aeson.Internal ()
@@ -330,7 +332,7 @@ instance AsValue LazyText.Text where
 -- >>> "[1,2,3]" ^? key "a"
 -- Nothing
 key :: AsValue t => Text -> Traversal' t Value
-key i = _Object . ix i
+key i = _Object . flip HM.alterF i . _Just
 {-# INLINE key #-}
 
 -- | A Traversal into Object properties
@@ -355,7 +357,10 @@ members = _Object . traverse
 -- >>> "[1,2,3]" & nth 1 .~ Number 20
 -- "[1,20,3]"
 nth :: AsValue t => Int -> Traversal' t Value
-nth i = _Array . ix i
+
+nth i = _Array . \f a -> if 0 <= i && i < V.length a
+  then f (a V.! i) <&> \v -> a V.// [(i, v)]
+  else pure a
 {-# INLINE nth #-}
 
 -- | A Traversal into Array elements
