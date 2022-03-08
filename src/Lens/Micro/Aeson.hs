@@ -40,8 +40,6 @@ import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import qualified Data.ByteString as Strict
 import           Data.ByteString.Lazy.Char8 as Lazy
 import           Data.Hashable
-import           Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HM
 import           Data.Scientific (Scientific)
 import qualified Data.Scientific as Scientific
 import           Data.Text as Text
@@ -269,17 +267,12 @@ class AsPrimitive t => AsValue t where
   --
   -- >>> "{\"a\": {}, \"b\": null}" ^? key "b" . _Object
   -- Nothing
-  _Object :: Traversal' t (HashMap Text Value)
-  _Object = _Value . trav
-    where
-      trav f (Object o) = Object . KM.fromHashMapText <$> f (KM.toHashMapText o)
-      trav _ v          = pure v
+  _Object :: Traversal' t (KM.KeyMap Value)
+  _Object = _Value . \f v -> case v of Object o -> Object <$> f o; _ -> pure v
   {-# INLINE _Object #-}
 
   _Array :: Traversal' t (Vector Value)
-  _Array = _Value . trav
-    where trav f (Array a) = Array <$> f a
-          trav _ v         = pure v
+  _Array = _Value . \f v -> case v of Array a -> Array <$> f a; _ -> pure v
   {-# INLINE _Array #-}
 
 instance AsValue Value where
@@ -307,7 +300,7 @@ instance AsValue LazyText.Text where
   {-# INLINE _Value #-}
 
 -- |
--- Like 'ix', but for 'Object' with Text indices. This often has better
+-- Like 'ix', but for 'Object' with 'Key' indices. This often has better
 -- inference than 'ix' when used with OverloadedStrings.
 --
 -- >>> "{\"a\": 100, \"b\": 200}" ^? key "a"
@@ -315,8 +308,8 @@ instance AsValue LazyText.Text where
 --
 -- >>> "[1,2,3]" ^? key "a"
 -- Nothing
-key :: AsValue t => Text -> Traversal' t Value
-key i = _Object . flip HM.alterF i . _Just
+key :: AsValue t => Key -> Traversal' t Value
+key i = _Object . ix i
 {-# INLINE key #-}
 
 -- | A Traversal into Object properties
@@ -341,7 +334,6 @@ members = _Object . traverse
 -- >>> "[1,2,3]" & nth 1 .~ Number 20
 -- "[1,20,3]"
 nth :: AsValue t => Int -> Traversal' t Value
-
 nth i = _Array . \f a -> if 0 <= i && i < V.length a
   then f (a V.! i) <&> \v -> a V.// [(i, v)]
   else pure a

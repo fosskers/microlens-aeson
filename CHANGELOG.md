@@ -5,6 +5,11 @@
 #### Changed
 
 - Require `base >= 4.9`, same as `aeson-2.*` does.
+- Convert `HashMap Text`-based interfaces to `KeyMap Key` (except for
+  `Ixed Value`).  This changes the
+  types of:
+  - `_Object`
+  - `key`
 
 #### Removed
 

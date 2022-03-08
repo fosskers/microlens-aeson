@@ -1,8 +1,8 @@
 module Main where
 
 import           Data.Aeson
+import qualified Data.Aeson.Key as Key
 import qualified Data.Aeson.KeyMap as KM
-import qualified Data.HashMap.Strict as HMS
 import qualified Data.Text as T
 import           Lens.Micro
 import           Lens.Micro.Aeson
@@ -35,21 +35,21 @@ suite = testGroup "Unit Tests"
     , testCase "" $ ("[1, \"x\", null, true, false]" ^? nth 2 . _Primitive) @?= Just NullPrim
     , testCase "" $ ("[1, \"x\", null, true, false]" ^? nth 3 . _Primitive) @?= Just (BoolPrim True)
     , testCase "" $ ("[1, \"x\", null, true, false]" ^? nth 4 . _Primitive) @?= Just (BoolPrim False)
-    , testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (T.pack "a") . _String) @?= Just (T.pack "xyz")
-    , testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (T.pack "b") . _String) @?= Nothing
-    , testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (T.pack "b") . _Bool) @?= Just True
-    , testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (T.pack "a") . _Bool) @?= Nothing
-    , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (T.pack "b") . _Null) @?= Just ()
-    , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (T.pack "a") . _Null) @?= Nothing
-    , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (T.pack "a") . nonNull) @?= Just (String $ T.pack "xyz")
-    , testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (T.pack "a") . nonNull) @?= Just (Object . KM.fromHashMapText $ HMS.fromList [])
-    , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (T.pack "b") . nonNull) @?= Nothing
+    , testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (Key.fromString "a") . _String) @?= Just (T.pack "xyz")
+    , testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (Key.fromString "b") . _String) @?= Nothing
+    , testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (Key.fromString "b") . _Bool) @?= Just True
+    , testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (Key.fromString "a") . _Bool) @?= Nothing
+    , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (Key.fromString "b") . _Null) @?= Just ()
+    , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (Key.fromString "a") . _Null) @?= Nothing
+    , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (Key.fromString "a") . nonNull) @?= Just (String $ T.pack "xyz")
+    , testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (Key.fromString "a") . nonNull) @?= Just (Object $ KM.fromList [])
+    , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (Key.fromString "b") . nonNull) @?= Nothing
     ]
   , testGroup "Non-primitive Traversals"
-    [ testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (T.pack "a") . _Object) @?= Just (HMS.fromList [])
-    , testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (T.pack "b") . _Object) @?= Nothing
-    , testCase "" $ ("{\"a\": 100, \"b\": 200}" ^? key (T.pack "a")) @?= Just (Number 100.0)
-    , testCase "" $ ("[1,2,3]" ^? key (T.pack "a")) @?= Nothing
+    [ testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (Key.fromString "a") . _Object) @?= Just (KM.fromList [])
+    , testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (Key.fromString "b") . _Object) @?= Nothing
+    , testCase "" $ ("{\"a\": 100, \"b\": 200}" ^? key (Key.fromString "a")) @?= Just (Number 100.0)
+    , testCase "" $ ("[1,2,3]" ^? key (Key.fromString "a")) @?= Nothing
     , testCase "" $ (sort ("{\"a\": 4, \"b\": 7}" ^.. members . _Number)) @?= [4.0, 7.0]
     , testCase "" $ ("{\"a\": 4}" & members . _Number %~ (* 10)) @?= "{\"a\":40}"
     , testCase "" $ ("[1,2,3]" ^? nth (-1)) @?= Nothing
