@@ -25,7 +25,7 @@ common commons
   ghc-options:      -Wall -fwarn-incomplete-record-updates
   build-depends:
     , aeson                 >=2.0
-    , base                  >=4.7   && <5
+    , base                  >=4.9   && <5
     , bytestring
     , deepseq
     , hashable

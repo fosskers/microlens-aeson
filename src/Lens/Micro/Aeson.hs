@@ -1,12 +1,8 @@
-{-# LANGUAGE CPP               #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DeriveAnyClass    #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RankNTypes        #-}
-
-#if MIN_VERSION_base(4,8,0)
-{-# LANGUAGE DeriveAnyClass    #-}
-#endif
 
 -- |
 -- Module    :  Lens.Micro.Aeson
@@ -37,16 +33,13 @@ module Lens.Micro.Aeson
   , AsJSON(..)
   ) where
 
-#if !MIN_VERSION_base(4,8,0)
-import           Control.Applicative
-import           Data.Traversable (traverse)
-#endif
 import           Data.Aeson
 import qualified Data.Aeson.KeyMap as KM
 import           Data.Aeson.Parser (value)
 import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import qualified Data.ByteString as Strict
 import           Data.ByteString.Lazy.Char8 as Lazy
+import           Data.Hashable
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import           Data.Scientific (Scientific)
@@ -61,10 +54,6 @@ import           GHC.Generics
 import           Lens.Micro
 import           Lens.Micro.Aeson.Internal ()
 import           Prelude
-
-#if MIN_VERSION_base(4,8,0)
-import           Data.Hashable
-#endif
 
 ------------------------------------------------------------------------------
 -- Scientific Traversals
@@ -147,12 +136,7 @@ data Primitive
   | NumberPrim !Scientific
   | BoolPrim !Bool
   | NullPrim
-#if !MIN_VERSION_base(4,8,0)
-  deriving (Eq, Ord, Show, Generic)
-#endif
-#if MIN_VERSION_base(4,8,0)
   deriving (Eq, Ord, Show, Generic, Hashable)
-#endif
 
 instance AsNumber Primitive where
   _Number f (NumberPrim n) = NumberPrim <$> f n

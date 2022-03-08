@@ -1,6 +1,10 @@
 # microlens-aeson
 
-## 2.5.0 (2022-03-05)
+## 2.5.0 (2022-03-08)
+
+#### Changed
+
+- Require `base >= 4.9`, same as `aeson-2.*` does.
 
 #### Removed
 
