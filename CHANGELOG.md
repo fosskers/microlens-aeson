@@ -4,8 +4,7 @@
 
 #### Changed
 
-- Convert `HashMap Text`-based interfaces to `KeyMap Key` (except for
-  `Ixed Value`).  This changes the
+- Convert `HashMap Text`-based interfaces to `KeyMap Key`.  This changes the
   types of:
   - `_Object`
   - `key`

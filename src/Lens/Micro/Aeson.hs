@@ -6,7 +6,7 @@
 
 -- |
 -- Module    :  Lens.Micro.Aeson
--- Copyright :  (c) Colin Woodbury 2015-2021, (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
+-- Copyright :  (c) Colin Woodbury 2015-2022, (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
 -- License   :  BSD3
 -- Maintainer:  Colin Woodbury <colingw@gmail.com>
 --
