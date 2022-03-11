@@ -334,9 +334,11 @@ members = _Object . traverse
 -- >>> "[1,2,3]" & nth 1 .~ Number 20
 -- "[1,20,3]"
 nth :: AsValue t => Int -> Traversal' t Value
-nth i = _Array . \f a -> if 0 <= i && i < V.length a
-  then f (a V.! i) <&> \v -> a V.// [(i, v)]
-  else pure a
+nth i = _Array . vectorIxI
+  where
+    vectorIxI f a
+      | 0 <= i, i < V.length a = f (a V.! i) <&> \v -> a V.// [(i, v)]
+      | otherwise              = pure a
 {-# INLINE nth #-}
 
 -- | A Traversal into Array elements
