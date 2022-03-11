@@ -1,14 +1,12 @@
 # microlens-aeson
 
-## 2.5.0 (2022-03-08)
+## Unreleased
 
 #### Changed
 
-- Convert `HashMap Text`-based interfaces to `KeyMap Key`.  This changes the
-  types of:
-  - `_Object`
-  - `key`
-- Require `base >= 4.9`, same as `aeson-2.*` does.
+- Convert `HashMap Text`-based interfaces to `KeyMap Key`. This changes the
+  types of `_Object` and `key`.
+- Require `base >= 4.9`, the same as `aeson-2.*` does.
 - Drop dependencies on `deepseq` and `unordered-containers`.
 
 #### Removed

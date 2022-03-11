@@ -337,8 +337,8 @@ nth :: AsValue t => Int -> Traversal' t Value
 nth i = _Array . vectorIxI
   where
     vectorIxI f a
-      | 0 <= i, i < V.length a = f (a V.! i) <&> \v -> a V.// [(i, v)]
-      | otherwise              = pure a
+      | 0 <= i && i < V.length a = f (a V.! i) <&> \v -> a V.// [(i, v)]
+      | otherwise                = pure a
 {-# INLINE nth #-}
 
 -- | A Traversal into Array elements
