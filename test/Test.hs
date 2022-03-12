@@ -29,13 +29,8 @@ suite = testGroup "Unit Tests"
     [ testCase "" $ ("[10]" ^? nth 0 . _Integral) @?= Just (10 :: Int)
     , testCase "" $ ("[10.5]" ^? nth 0 . _Integral) @?= Just (10 :: Int)
     ]
-  , testGroup "Nulls and Primitives"
-    [ testCase "" $ ("[1, \"x\", null, true, false]" ^? nth 0 . _Primitive) @?= Just (NumberPrim 1.0)
-    , testCase "" $ ("[1, \"x\", null, true, false]" ^? nth 1 . _Primitive) @?= Just (StringPrim $ T.pack "x")
-    , testCase "" $ ("[1, \"x\", null, true, false]" ^? nth 2 . _Primitive) @?= Just NullPrim
-    , testCase "" $ ("[1, \"x\", null, true, false]" ^? nth 3 . _Primitive) @?= Just (BoolPrim True)
-    , testCase "" $ ("[1, \"x\", null, true, false]" ^? nth 4 . _Primitive) @?= Just (BoolPrim False)
-    , testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (Key.fromString "a") . _String) @?= Just (T.pack "xyz")
+  , testGroup "Strings, Bools, and Nulls"
+    [ testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (Key.fromString "a") . _String) @?= Just (T.pack "xyz")
     , testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (Key.fromString "b") . _String) @?= Nothing
     , testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (Key.fromString "b") . _Bool) @?= Just True
     , testCase "" $ ("{\"a\": \"xyz\", \"b\": true}" ^? key (Key.fromString "a") . _Bool) @?= Nothing
@@ -45,7 +40,7 @@ suite = testGroup "Unit Tests"
     , testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (Key.fromString "a") . nonNull) @?= Just (Object $ KM.fromList [])
     , testCase "" $ ("{\"a\": \"xyz\", \"b\": null}" ^? key (Key.fromString "b") . nonNull) @?= Nothing
     ]
-  , testGroup "Non-primitive Traversals"
+  , testGroup "Object and Array Traversals"
     [ testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (Key.fromString "a") . _Object) @?= Just (KM.fromList [])
     , testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (Key.fromString "b") . _Object) @?= Nothing
     , testCase "" $ ("{\"a\": 100, \"b\": 200}" ^? key (Key.fromString "a")) @?= Just (Number 100.0)

@@ -4,6 +4,9 @@
 
 #### Changed
 
+- Simplify class hierarchy to `AsNumber t => AsValue t`.  Change the default
+  signature of `_Number` accordingly.
+- Move `_String`, `_Bool`, and `_Null` to be methods of class `AsValue`.
 - Convert `HashMap Text`-based interfaces to `KeyMap Key`. This changes the
   types of `_Object` and `key`.
 - Require `base >= 4.9`, the same as `aeson-2.*` does.
@@ -11,6 +14,7 @@
 
 #### Removed
 
+- `Primitive` and class `AsPrimitive`.
 - Orphan `Ixed` instances for `HashMap` and `Vector`.
 
 ## 2.4.1 (2022-01-21)
