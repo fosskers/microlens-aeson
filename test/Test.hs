@@ -49,6 +49,7 @@ suite = testGroup "Unit Tests"
     [ testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (Key.fromString "a") . _Object) @?= Just (KM.fromList [])
     , testCase "" $ ("{\"a\": {}, \"b\": null}" ^? key (Key.fromString "b") . _Object) @?= Nothing
     , testCase "" $ ("{\"a\": 100, \"b\": 200}" ^? key (Key.fromString "a")) @?= Just (Number 100.0)
+    , testCase "" $ ("{\"a\": 100, \"b\": 200}" ^? _Value . ix (Key.fromString "a")) @?= Just (Number 100.0)
     , testCase "" $ ("[1,2,3]" ^? key (Key.fromString "a")) @?= Nothing
     , testCase "" $ (sort ("{\"a\": 4, \"b\": 7}" ^.. members . _Number)) @?= [4.0, 7.0]
     , testCase "" $ ("{\"a\": 4}" & members . _Number %~ (* 10)) @?= "{\"a\":40}"
