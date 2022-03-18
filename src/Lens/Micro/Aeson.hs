@@ -1,6 +1,4 @@
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE DeriveAnyClass    #-}
-{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RankNTypes        #-}
 
@@ -22,9 +20,6 @@ module Lens.Micro.Aeson
     AsNumber(..)
   , _Integral
   , nonNull
-  -- * Primitive
-  , Primitive(..)
-  , AsPrimitive(..)
   -- * Objects and Arrays
   , AsValue(..)
   , key, members
@@ -39,7 +34,6 @@ import           Data.Aeson.Parser (value)
 import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import qualified Data.ByteString as Strict
 import           Data.ByteString.Lazy.Char8 as Lazy
-import           Data.Hashable
 import           Data.Scientific (Scientific)
 import qualified Data.Scientific as Scientific
 import           Data.Text as Text
@@ -48,7 +42,6 @@ import qualified Data.Text.Lazy as LazyText
 import qualified Data.Text.Lazy.Encoding as LazyText
 import           Data.Vector (Vector)
 import qualified Data.Vector as V
-import           GHC.Generics
 import           Lens.Micro
 import           Lens.Micro.Aeson.Internal ()
 import           Prelude
@@ -66,12 +59,12 @@ class AsNumber t where
   -- >>> "[1, \"x\"]" ^? nth 1 . _Number
   -- Nothing
   _Number :: Traversal' t Scientific
-  default _Number :: AsPrimitive t => Traversal' t Scientific
-  _Number = _Primitive . _Number
+  default _Number :: AsValue t => Traversal' t Scientific
+  _Number = _Value . _Number
   {-# INLINE _Number #-}
 
   -- |
-  -- Traversal into an 'Double' over a 'Value', 'Primitive' or 'Scientific'
+  -- Traversal into an 'Double' over a 'Value' or 'Scientific'
   --
   -- >>> "[10.2]" ^? nth 0 . _Double
   -- Just 10.2
@@ -80,7 +73,7 @@ class AsNumber t where
   {-# INLINE _Double #-}
 
   -- |
-  -- Traversal into an 'Integer' over a 'Value', 'Primitive' or 'Scientific'
+  -- Traversal into an 'Integer' over a 'Value' or 'Scientific'
   --
   -- >>> "[10]" ^? nth 0 . _Integer
   -- Just 10
@@ -125,117 +118,8 @@ _Integral = _Number . lens floor (const fromIntegral)
 {-# INLINE _Integral #-}
 
 ------------------------------------------------------------------------------
--- Null values and primitives
+-- Null values
 ------------------------------------------------------------------------------
-
--- | Primitives of 'Value'
-data Primitive
-  = StringPrim !Text
-  | NumberPrim !Scientific
-  | BoolPrim !Bool
-  | NullPrim
-  deriving (Eq, Ord, Show, Generic, Hashable)
-
-instance AsNumber Primitive where
-  _Number f (NumberPrim n) = NumberPrim <$> f n
-  _Number _ p              = pure p
-  {-# INLINE _Number #-}
-
--- | Traverse into various JSON primitives.
-class AsNumber t => AsPrimitive t where
-  -- |
-  -- >>> "[1, \"x\", null, true, false]" ^? nth 0 . _Primitive
-  -- Just (NumberPrim 1.0)
-  --
-  -- >>> "[1, \"x\", null, true, false]" ^? nth 1 . _Primitive
-  -- Just (StringPrim "x")
-  --
-  -- >>> "[1, \"x\", null, true, false]" ^? nth 2 . _Primitive
-  -- Just NullPrim
-  --
-  -- >>> "[1, \"x\", null, true, false]" ^? nth 3 . _Primitive
-  -- Just (BoolPrim True)
-  --
-  -- >>> "[1, \"x\", null, true, false]" ^? nth 4 . _Primitive
-  -- Just (BoolPrim False)
-  _Primitive :: Traversal' t Primitive
-  default _Primitive :: AsValue t => Traversal' t Primitive
-  _Primitive = _Value . _Primitive
-  {-# INLINE _Primitive #-}
-
-  -- |
-  -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _String
-  -- Just "xyz"
-  --
-  -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "b" . _String
-  -- Nothing
-  _String :: Traversal' t Text
-  _String = _Primitive . trav
-    where trav f (StringPrim s) = StringPrim <$> f s
-          trav _ x              = pure x
-  {-# INLINE _String #-}
-
-  -- |
-  -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "b" . _Bool
-  -- Just True
-  --
-  -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _Bool
-  -- Nothing
-  _Bool :: Traversal' t Bool
-  _Bool = _Primitive . trav
-    where trav f (BoolPrim b) = BoolPrim <$> f b
-          trav _ x            = pure x
-  {-# INLINE _Bool #-}
-
-  -- |
-  -- >>> "{\"a\": \"xyz\", \"b\": null}" ^? key "b" . _Null
-  -- Just ()
-  --
-  -- >>> "{\"a\": \"xyz\", \"b\": null}" ^? key "a" . _Null
-  -- Nothing
-  _Null :: Traversal' t ()
-  _Null = _Primitive . trav
-    where trav f NullPrim = NullPrim <$ f ()
-          trav _ x        = pure x
-  {-# INLINE _Null #-}
-
--- Helper for the function below.
-fromPrim :: Primitive -> Value
-fromPrim (StringPrim s) = String s
-fromPrim (NumberPrim n) = Number n
-fromPrim (BoolPrim b)   = Bool b
-fromPrim NullPrim       = Null
-{-# INLINE fromPrim #-}
-
-instance AsPrimitive Value where
-  _Primitive f (String s) = fromPrim <$> f (StringPrim s)
-  _Primitive f (Number n) = fromPrim <$> f (NumberPrim n)
-  _Primitive f (Bool b)   = fromPrim <$> f (BoolPrim b)
-  _Primitive f Null       = fromPrim <$> f NullPrim
-  _Primitive _ v          = pure v
-  {-# INLINE _Primitive #-}
-
-  _String f (String s) = String <$> f s
-  _String _ v          = pure v
-  {-# INLINE _String #-}
-
-  _Bool f (Bool b) = Bool <$> f b
-  _Bool _ v        = pure v
-  {-# INLINE _Bool #-}
-
-  _Null f Null = Null <$ f ()
-  _Null _ v    = pure v
-  {-# INLINE _Null #-}
-
-instance AsPrimitive Strict.ByteString
-instance AsPrimitive Lazy.ByteString
-instance AsPrimitive Text.Text
-instance AsPrimitive LazyText.Text
-instance AsPrimitive String
-
-instance AsPrimitive Primitive where
-  _Primitive = id
-  {-# INLINE _Primitive #-}
 
 -- | Traversal into non-'Null' values
 --
@@ -253,13 +137,49 @@ nonNull f v    = _Value f v
 {-# INLINE nonNull #-}
 
 ------------------------------------------------------------------------------
--- Non-primitive traversals
+-- Non-number traversals
 ------------------------------------------------------------------------------
 
 -- | Traverse into JSON Objects and Arrays.
-class AsPrimitive t => AsValue t where
+class AsNumber t => AsValue t where
   -- | Traverse into data that encodes a `Value`
   _Value :: Traversal' t Value
+
+  -- |
+  -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _String
+  -- Just "xyz"
+  --
+  -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "b" . _String
+  -- Nothing
+  _String :: Traversal' t Text
+  _String = _Value . trav
+    where trav f (String s) = String <$> f s
+          trav _ v          = pure v
+  {-# INLINE _String #-}
+
+  -- |
+  -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "b" . _Bool
+  -- Just True
+  --
+  -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "a" . _Bool
+  -- Nothing
+  _Bool :: Traversal' t Bool
+  _Bool = _Value . trav
+    where trav f (Bool b) = Bool <$> f b
+          trav _ v        = pure v
+  {-# INLINE _Bool #-}
+
+  -- |
+  -- >>> "{\"a\": \"xyz\", \"b\": null}" ^? key "b" . _Null
+  -- Just ()
+  --
+  -- >>> "{\"a\": \"xyz\", \"b\": null}" ^? key "a" . _Null
+  -- Nothing
+  _Null :: Traversal' t ()
+  _Null = _Value . trav
+    where trav f Null = Null <$ f ()
+          trav _ v    = pure v
+  {-# INLINE _Null #-}
 
   -- |
   -- >>> "{\"a\": {}, \"b\": null}" ^? key "a" . _Object
