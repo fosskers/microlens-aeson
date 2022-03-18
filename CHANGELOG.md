@@ -9,6 +9,7 @@
 - Move `_String`, `_Bool`, and `_Null` to be methods of class `AsValue`.
 - Convert `HashMap Text`-based interfaces to `KeyMap Key`. This changes the
   types of `_Object` and `key`.
+- Change `Index Value` to `Key`.
 - Require `base >= 4.9`, the same as `aeson-2.*` does.
 - Drop dependencies on `deepseq` and `unordered-containers`.
 

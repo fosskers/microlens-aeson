@@ -20,19 +20,18 @@ module Lens.Micro.Aeson.Internal where
 import           Data.Aeson (Value(..))
 import qualified Data.Aeson.Key as Key
 import qualified Data.Aeson.KeyMap as KM
-import           Data.Text (Text)
 import           Lens.Micro.Internal
 
 ---
 
-type instance Index Value = Text
+type instance Index Value = Key.Key
 
 type instance IxValue Value = Value
 
 -- | Can only index into the contents of an `Object`,
--- which is a `KM.KeyMap`.
+-- which is a `KM.KeyMap` `Value`.
 instance Ixed Value where
-  ix i f (Object o) = Object <$> ix (Key.fromText i) f o
+  ix i f (Object o) = Object <$> ix i f o
   ix _ _ v          = pure v
   {-# INLINE ix #-}
 
