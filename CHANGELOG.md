@@ -1,10 +1,14 @@
 # microlens-aeson
 
-## Unreleased
+## 2.5.0 (2022-03-19)
+
+This is a breaking update that matches upstream changes to `lens-aeson`. Luckily
+the changes are mostly simplifications and improvements that better match the
+`aeson-2` API. Thanks to `sjshuck` for his contributions to this release.
 
 #### Changed
 
-- Simplify class hierarchy to `AsNumber t => AsValue t`.  Change the default
+- Simplify class hierarchy to `AsNumber t => AsValue t`. Change the default
   signature of `_Number` accordingly.
 - Move `_String`, `_Bool`, and `_Null` to be methods of class `AsValue`.
 - Convert `HashMap Text`-based interfaces to `KeyMap Key`. This changes the
