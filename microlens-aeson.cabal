@@ -1,7 +1,7 @@
 cabal-version:      2.2
 name:               microlens-aeson
 version:            2.5.0
-synopsis:           Law-abiding lenses for Aeson, using microlens.
+synopsis:           Law-abiding lenses for Aeson, using microlens
 description:        Law-abiding lenses for Aeson, using microlens.
 category:           Numeric
 homepage:           http://github.com/fosskers/microlens-aeson/
@@ -15,7 +15,7 @@ tested-with: GHC==9.6.2, GHC==9.4.5, GHC==9.2.7, GHC==9.0.2, GHC==8.10.7
 license:            MIT
 license-file:       LICENSE
 build-type:         Simple
-extra-source-files:
+extra-doc-files:
   AUTHORS.md
   README.md
   CHANGELOG.md
