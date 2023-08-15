@@ -30,8 +30,6 @@ module Lens.Micro.Aeson
 
 import           Data.Aeson
 import qualified Data.Aeson.KeyMap as KM
-import           Data.Aeson.Parser (value)
-import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import qualified Data.ByteString as Strict
 import           Data.ByteString.Lazy.Char8 as Lazy
 import           Data.Scientific (Scientific)
@@ -295,10 +293,7 @@ instance AsJSON Strict.ByteString where
   {-# INLINE _JSON #-}
 
 instance AsJSON Lazy.ByteString where
-  _JSON f b = maybe (pure b) (fmap encode . f) v
-    where v = maybeResult (parse value b) >>= \x -> case fromJSON x of
-            Success x' -> Just x'
-            _          -> Nothing
+  _JSON f b = maybe (pure b) (fmap encode . f) (decode b)
   {-# INLINE _JSON #-}
 
 instance AsJSON String where
