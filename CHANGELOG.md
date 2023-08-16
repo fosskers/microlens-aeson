@@ -1,5 +1,11 @@
 # microlens-aeson
 
+## 2.5.1 (2023-08-16)
+
+#### Changed
+
+- Support for `aeson-2.2`.
+
 ## 2.5.0 (2022-03-19)
 
 This is a breaking update that matches upstream changes to `lens-aeson`. Luckily
