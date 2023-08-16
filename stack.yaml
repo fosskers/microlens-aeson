@@ -1,7 +1,7 @@
-resolver: lts-19.0
+resolver: lts-21.7
 
-flags:
-  these:
-    assoc: false
-  strict:
-    assoc: false
+extra-deps:
+  - aeson-2.2.0.0
+  - text-iso8601-0.1
+  - integer-conversion-0.1
+  - th-abstraction-0.5.0.0
