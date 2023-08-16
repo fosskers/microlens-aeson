@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RankNTypes        #-}
@@ -43,6 +44,11 @@ import qualified Data.Vector as V
 import           Lens.Micro
 import           Lens.Micro.Aeson.Internal ()
 import           Prelude
+
+#if !MIN_VERSION_aeson(2,2,0)
+import           Data.Aeson.Parser (value)
+import           Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
+#endif
 
 ------------------------------------------------------------------------------
 -- Scientific Traversals
@@ -293,7 +299,14 @@ instance AsJSON Strict.ByteString where
   {-# INLINE _JSON #-}
 
 instance AsJSON Lazy.ByteString where
+#if MIN_VERSION_aeson(2,2,0)
   _JSON f b = maybe (pure b) (fmap encode . f) (decode b)
+#else
+  _JSON f b = maybe (pure b) (fmap encode . f) v
+    where v = maybeResult (parse value b) >>= \x -> case fromJSON x of
+            Success x' -> Just x'
+            _          -> Nothing
+#endif
   {-# INLINE _JSON #-}
 
 instance AsJSON String where
