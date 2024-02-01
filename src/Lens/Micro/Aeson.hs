@@ -5,9 +5,9 @@
 
 -- |
 -- Module    :  Lens.Micro.Aeson
--- Copyright :  (c) Colin Woodbury 2015-2022, (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
+-- Copyright :  (c) Colin Woodbury 2015-2024, (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
 -- License   :  BSD3
--- Maintainer:  Colin Woodbury <colingw@gmail.com>
+-- Maintainer:  Colin Woodbury <colin@fosskers.ca>
 --
 -- Traversals for Data.Aeson, based on microlens for minimal dependencies.
 --

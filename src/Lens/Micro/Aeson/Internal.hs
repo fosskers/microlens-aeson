@@ -6,9 +6,9 @@
 
 -- |
 -- Module    :  Lens.Micro.Aeson.Internal
--- Copyright :  (c) Colin Woodbury 2015-2022, (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
+-- Copyright :  (c) Colin Woodbury 2015-2024, (c) Edward Kmett 2013-2014, (c) Paul Wilson 2012
 -- License   :  BSD3
--- Maintainer:  Colin Woodbury <colingw@gmail.com>
+-- Maintainer:  Colin Woodbury <colin@fosskers.ca>
 --
 -- These are stolen from `Lens.Micro.Platform` to avoid its dependencies.
 -- They're altered to be specific to the Aeson context.
