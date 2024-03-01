@@ -12,8 +12,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        resolver: ["lts-22.8", "lts-21.25", "lts-20.26", "lts-19.33"]
+        resolver:
+          [
+            "nightly-2024-02-29",
+            "lts-22.8",
+            "lts-21.25",
+            "lts-20.26",
+            "lts-19.33",
+          ]
         include:
+          - resolver: "nightly-2024-02-29"
+            ghc: "9.8.1"
           - resolver: "lts-22.8"
             ghc: "9.6.4"
           - resolver: "lts-21.25"
