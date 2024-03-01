@@ -1,6 +1,6 @@
 cabal-version:      2.2
 name:               microlens-aeson
-version:            2.5.1
+version:            2.5.2
 synopsis:           Law-abiding lenses for Aeson, using microlens
 description:        Law-abiding lenses for Aeson, using microlens.
 category:           Numeric
@@ -10,7 +10,8 @@ maintainer:         Colin Woodbury <colin@fosskers.ca>
 copyright:
   Copyright (C) 2012 Paul Wilson, (C) 2013 Edward A. Kmett, (C) 2015 Colin Woodbury
 tested-with:
-    GHC==9.6.4
+    GHC==9.8.1
+  , GHC==9.6.4
   , GHC==9.4.8
   , GHC==9.2.8
   , GHC==9.0.2

@@ -1,5 +1,11 @@
 # microlens-aeson
 
+## 2.5.2 (2024-03-01)
+
+#### Changed
+
+- Support for `text-2.1`.
+
 ## 2.5.1 (2023-08-16)
 
 #### Changed
