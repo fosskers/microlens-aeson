@@ -31,6 +31,7 @@ of all the text types. Here are some examples:
 
 import Data.Aeson
 import Data.Text (Text)
+import Lens.Micro
 import Lens.Micro.Aeson
 
 --------------------------
@@ -41,19 +42,19 @@ a :: Maybe Int
 a = ("37" :: Text) ^? _Integer  -- Just 37
 
 -- | Setting one value within encoded JSON
-b :: Maybe Text
-b = "true" & _Bool .~ False  -- "false"
+b :: Text
+b = ("true" :: Text) & _Bool .~ False  -- "false"
 
 ----------------------
 -- Manipulating arrays
 ----------------------
 -- | Get all values as an Aeson type.
 c :: [Value]
-c = "[1, 2, 3]" ^.. values  -- [Number 1.0, Number 2.0, Number 3.0]
+c = ("[1, 2, 3]" :: Text) ^.. values  -- [Number 1.0, Number 2.0, Number 3.0]
 
 -- | Get all values cast to some simpler number type.
 d :: [Double]
-d = "[1, 2, 3]" ^.. values . _Double  -- [1.0, 2.0, 3.0]
+d = ("[1, 2, 3]" :: Text) ^.. values . _Double  -- [1.0, 2.0, 3.0]
 
 -- | Access a specific index, and set a `Value` directly.
 e :: Text
@@ -73,8 +74,8 @@ g = ("{\"a\": 100, \"b\": 200}" :: Text) ^? key "a"  -- Just (Number 100.0)
 -----------------------------------
 -- Aeson `Value`s from encoded JSON
 -----------------------------------
-h :: Maybe Text
-h = "{\"a\":4,\"b\":7}" ^? _Value
+h :: Maybe Value
+h = ("{\"a\":4,\"b\":7}" :: Text) ^? _Value
 -- Just (Object (fromList [("a",Number 4.0),("b",Number 7.0)]))
 ```
 
